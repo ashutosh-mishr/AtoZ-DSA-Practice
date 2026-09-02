@@ -8,7 +8,7 @@ import PracticePage from './components/PracticePage'
 import StreakPage from './components/StreakPage'
 
 function LoadingState() {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">Loading your practice data…</div>
+  return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">Loading your practice data…</div>
 }
 
 function ErrorState({ message, onRetry }) {
@@ -20,7 +20,7 @@ function ArticleIcon() {
 }
 
 function YouTubeIcon() {
-  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" /></svg>
+  return <img src="/youtube-icon.png" alt="" className="h-4 w-4 object-contain" aria-hidden="true" />
 }
 
 function PracticeLink({ href, label, tone = 'default', iconOnly = false, children }) {
@@ -30,13 +30,13 @@ function PracticeLink({ href, label, tone = 'default', iconOnly = false, childre
     gfg: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200',
     article: 'border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-200',
     youtube: 'border-rose-500/40 bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-200',
-    default: 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+    default: 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]',
   }
   return <a href={href} target="_blank" rel="noreferrer" title={label} aria-label={label} className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${iconOnly ? 'w-8 px-0' : ''} ${tones[tone] || tones.default}`}>{children || label}</a>
 }
 
 function EmptyState({ title, detail }) {
-  return <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900"><h2 className="font-semibold">{title}</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{detail}</p></div>
+  return <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-[#3a3a3a] dark:bg-[#171717]"><h2 className="font-semibold">{title}</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{detail}</p></div>
 }
 
 function routeFor(view, topic = null) {
@@ -278,7 +278,7 @@ function App() {
       const item = progress.difficulty?.[level] || { solved: 0, total: 0 }
       const pct = item.total ? Math.round((item.solved / item.total) * 100) : 0
       const tone = level === 'easy' ? 'emerald' : level === 'medium' ? 'amber' : 'rose'
-      return <article key={level} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><p className="text-sm font-semibold capitalize">{level}</p><span className={`rounded-full px-2 py-1 text-xs font-semibold ${tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : tone === 'amber' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{item.solved}/{item.total}</span></div><div className="mt-4 flex items-end justify-between"><span className="text-2xl font-semibold">{item.solved} solved</span><span className="text-sm text-slate-500 dark:text-slate-400">{pct}%</span></div><ProgressBar value={pct} className="mt-3" /></article>
+      return <article key={level} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717]"><div className="flex items-center justify-between"><p className="text-sm font-semibold capitalize">{level}</p><span className={`rounded-full px-2 py-1 text-xs font-semibold ${tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : tone === 'amber' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{item.solved}/{item.total}</span></div><div className="mt-4 flex items-end justify-between"><span className="text-2xl font-semibold">{item.solved} solved</span><span className="text-sm text-slate-500 dark:text-slate-400">{pct}%</span></div><ProgressBar value={pct} className="mt-3" /></article>
     })
 
     return <>
@@ -290,14 +290,14 @@ function App() {
             {quote ? <>{quote.quote_text}{quote.author ? <span className="ml-2 font-semibold text-amber-600 dark:text-amber-300">— {quote.author}</span> : null}</> : 'Keep solving, learning, and revising one problem at a time.'}
           </p>
         </div>
-        <div className="flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <div className="flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">
           <span className={`h-2 w-2 rounded-full ${databaseStatus === 'connected' ? 'bg-emerald-500' : databaseStatus === 'checking' ? 'bg-amber-400' : 'bg-rose-500'}`} aria-hidden="true" />
           {databaseStatus === 'connected' ? 'Database live' : databaseStatus === 'checking' ? 'Checking database' : 'Database offline'}
         </div>
       </div>
 
       <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Dashboard progress">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717]">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Overall Progress</p>
           <div className="mt-5 flex items-end justify-between gap-4"><span className="text-3xl font-semibold">{progress.completion_percentage}%</span><span className="text-sm text-slate-500 dark:text-slate-400">{progress.solved} / {progress.total} solved</span></div>
           <ProgressBar value={progress.completion_percentage} className="mt-4" />
@@ -307,14 +307,14 @@ function App() {
           ['Current Streak', `${streakSummary?.current_streak ?? 0} ${(streakSummary?.current_streak ?? 0) === 1 ? 'day' : 'days'}`, '🔥'],
           ['Longest Streak', `${streakSummary?.longest_streak ?? 0} ${(streakSummary?.longest_streak ?? 0) === 1 ? 'day' : 'days'}`, '🏆'],
           ['Active Days', streakSummary?.active_days ?? 0, '✓'],
-        ].map(([label, value, icon]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p><span className="text-base text-violet-500" aria-hidden="true">{icon}</span></div><p className="mt-4 text-2xl font-semibold">{value}</p></article>)}
+        ].map(([label, value, icon]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717]"><div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p><span className="text-base text-violet-500" aria-hidden="true">{icon}</span></div><p className="mt-4 text-2xl font-semibold">{value}</p></article>)}
 
         <div className="grid grid-cols-2 gap-3">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-[#303030] dark:bg-[#171717] sm:p-5">
             <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">Revision</p><span className="text-base text-sky-400" aria-hidden="true">↻</span></div>
             <p className="mt-4 text-2xl font-semibold">{revisionCount}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-[#303030] dark:bg-[#171717] sm:p-5">
             <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">Bookmarks</p><span className="text-base text-amber-400" aria-hidden="true">★</span></div>
             <p className="mt-4 text-2xl font-semibold">{bookmarkCount}</p>
           </article>
@@ -341,18 +341,18 @@ function App() {
         </div>
         <div className="w-full sm:max-w-sm">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Search problems</label>
-          <input value={roadmapSearch} onChange={(event) => setRoadmapSearch(event.target.value)} placeholder="Search by problem name…" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+          <input value={roadmapSearch} onChange={(event) => setRoadmapSearch(event.target.value)} placeholder="Search by problem name…" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100" />
         </div>
       </div>
-      {query ? (matchingProblems.length ? <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="border-b border-slate-200 px-5 py-3 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">Showing {matchingProblems.length} matching {matchingProblems.length === 1 ? 'problem' : 'problems'}</div>
+      {query ? (matchingProblems.length ? <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#303030] dark:bg-[#171717]">
+        <div className="border-b border-slate-200 px-5 py-3 text-sm text-slate-500 dark:border-[#303030] dark:text-slate-400">Showing {matchingProblems.length} matching {matchingProblems.length === 1 ? 'problem' : 'problems'}</div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"><tr><th className="w-14 px-5 py-3">#</th><th className="px-5 py-3">Problem</th><th className="px-5 py-3">Topic</th><th className="px-5 py-3">Subtopic</th><th className="w-28 px-5 py-3">Difficulty</th><th className="w-24 px-5 py-3 text-center">Solved</th><th className="w-72 px-5 py-3">Practice</th></tr></thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-[#303030] dark:bg-[#111111] dark:text-slate-400"><tr><th className="w-14 px-5 py-3">#</th><th className="px-5 py-3">Problem</th><th className="px-5 py-3">Topic</th><th className="px-5 py-3">Subtopic</th><th className="w-28 px-5 py-3">Difficulty</th><th className="w-24 px-5 py-3 text-center">Solved</th><th className="w-72 px-5 py-3">Practice</th></tr></thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-[#303030]">
               {matchingProblems.map((problem, index) => {
                 const topic = roadmapTopics.find((item) => Number(item.id) === Number(problem.topic?.id))
-                return <tr key={problem.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                return <tr key={problem.id} className="hover:bg-slate-50 dark:hover:bg-[#242424]/40">
                   <td className="px-5 py-4 text-slate-400">{index + 1}</td>
                   <td className="px-5 py-4"><button type="button" onClick={() => topic && loadTopicProblems(topic)} className="cursor-pointer text-left font-semibold text-slate-900 hover:text-violet-600 dark:text-slate-100 dark:hover:text-violet-300">{problem.title}</button></td>
                   <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{problem.topic?.name || '—'}</td>
@@ -393,20 +393,20 @@ function App() {
     }, {})
 
     return <>
-      <div className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+      <div className="mb-7 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717] sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'DSA Roadmap', onClick: () => handleNavigate('roadmap') }, { label: selectedTopic.name }]} /><h1 className="text-[2rem] font-semibold leading-tight tracking-tight sm:text-[2.25rem]">{selectedTopic.name}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{selectedTopic.solved || 0} of {selectedTopic.total || 0} problems solved</p></div>
           <div className="w-full max-w-md lg:pb-1"><div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400"><span>Progress</span><span>{Math.round(selectedTopic.completion_percentage || 0)}%</span></div><ProgressBar value={selectedTopic.completion_percentage || 0} /></div>
         </div>
       </div>
-      {!topicProblems.loading && !topicProblems.error && topicProblems.items.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
+      {!topicProblems.loading && !topicProblems.error && topicProblems.items.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-[#303030] dark:bg-[#111111]">
         <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Showing {filteredProblems.length} of {topicProblems.items.length} problems</p>
         <div className="flex flex-wrap gap-2">
-          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span className="sr-only">Problem status</span><select value={topicStatusFilter} onChange={(event) => setTopicStatusFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"><option value="all">All problems</option><option value="solved">Solved</option><option value="unsolved">Unsolved</option></select></label>
-          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span className="sr-only">Difficulty</span><select value={topicDifficultyFilter} onChange={(event) => setTopicDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
+          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span className="sr-only">Problem status</span><select value={topicStatusFilter} onChange={(event) => setTopicStatusFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">All problems</option><option value="solved">Solved</option><option value="unsolved">Unsolved</option></select></label>
+          <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span className="sr-only">Difficulty</span><select value={topicDifficultyFilter} onChange={(event) => setTopicDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
         </div>
       </div>}
-      {topicProblems.loading ? <LoadingState /> : topicProblems.error ? <ErrorState message={topicProblems.error} onRetry={() => loadTopicProblems(selectedTopic)} /> : filteredProblems.length ? <div className="space-y-3">{Object.entries(grouped).map(([key, group]) => { const isOpen = openSubtopics.has(key); const fullGroupItems = topicProblems.items.filter((problem) => String(problem.subtopic?.id || problem.subtopic?.name || 'other') === String(key)); const groupSolved = fullGroupItems.filter((problem) => problem.status === 'solved').length; const groupProgress = fullGroupItems.length ? Math.round((groupSolved / fullGroupItems.length) * 100) : 0; return <section key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" aria-labelledby={`subtopic-${key}`}><button type="button" onClick={() => toggleSubtopic(key)} aria-expanded={isOpen} className="w-full cursor-pointer px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50"><div className="flex items-center gap-4"><div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 id={`subtopic-${key}`} className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">{group.name}</h2><div className="flex shrink-0 items-center gap-3"><div className="w-28 sm:w-36"><div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400"><span>{groupSolved}/{fullGroupItems.length} solved</span><span>{groupProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${groupProgress}%` }} /></div></div><span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{group.items.length} {group.items.length === 1 ? 'problem' : 'problems'}</span></div></div></div><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-transform dark:border-slate-700 dark:text-slate-300 ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span></div></button>{isOpen ? <div className="border-t border-slate-200 p-3 dark:border-slate-800 sm:p-4"><ProblemList problems={group.items} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} /></div> : null}</section>})}</div> : <EmptyState title="No problems match these filters" detail="Try All problems or change the selected filters." />}
+      {topicProblems.loading ? <LoadingState /> : topicProblems.error ? <ErrorState message={topicProblems.error} onRetry={() => loadTopicProblems(selectedTopic)} /> : filteredProblems.length ? <div className="space-y-3">{Object.entries(grouped).map(([key, group]) => { const isOpen = openSubtopics.has(key); const fullGroupItems = topicProblems.items.filter((problem) => String(problem.subtopic?.id || problem.subtopic?.name || 'other') === String(key)); const groupSolved = fullGroupItems.filter((problem) => problem.status === 'solved').length; const groupProgress = fullGroupItems.length ? Math.round((groupSolved / fullGroupItems.length) * 100) : 0; return <section key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#303030] dark:bg-[#171717]" aria-labelledby={`subtopic-${key}`}><button type="button" onClick={() => toggleSubtopic(key)} aria-expanded={isOpen} className="w-full cursor-pointer px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-[#242424]/50"><div className="flex items-center gap-4"><div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 id={`subtopic-${key}`} className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">{group.name}</h2><div className="flex shrink-0 items-center gap-3"><div className="w-28 sm:w-36"><div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400"><span>{groupSolved}/{fullGroupItems.length} solved</span><span>{groupProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-[#242424]"><div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${groupProgress}%` }} /></div></div><span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{group.items.length} {group.items.length === 1 ? 'problem' : 'problems'}</span></div></div></div><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-transform dark:border-[#3a3a3a] dark:text-slate-300 ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span></div></button>{isOpen ? <div className="border-t border-slate-200 p-3 dark:border-[#303030] sm:p-4"><ProblemList problems={group.items} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} /></div> : null}</section>})}</div> : <EmptyState title="No problems match these filters" detail="Try All problems or change the selected filters." />}
     </>
   }
 
@@ -420,14 +420,14 @@ function App() {
     return <>
       <Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: title }]} />
       <div className="mb-8"><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title} problems</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{detail}</p></div>
-      {!collection.loading && !collection.error && collection.items.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"><p className="text-xs font-medium text-slate-500 dark:text-slate-400">Showing {filtered.length} of {collection.items.length} problems</p><div className="flex flex-wrap gap-2"><select value={collectionStatusFilter} onChange={(event) => setCollectionStatusFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"><option value="all">All problems</option><option value="solved">Solved</option><option value="unsolved">Unsolved</option></select><select value={collectionDifficultyFilter} onChange={(event) => setCollectionDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div></div>}
+      {!collection.loading && !collection.error && collection.items.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-[#303030] dark:bg-[#111111]"><p className="text-xs font-medium text-slate-500 dark:text-slate-400">Showing {filtered.length} of {collection.items.length} problems</p><div className="flex flex-wrap gap-2"><select value={collectionStatusFilter} onChange={(event) => setCollectionStatusFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">All problems</option><option value="solved">Solved</option><option value="unsolved">Unsolved</option></select><select value={collectionDifficultyFilter} onChange={(event) => setCollectionDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div></div>}
       {collection.loading ? <LoadingState /> : collection.error ? <ErrorState message={collection.error} onRetry={() => loadCollection(name)} /> : filtered.length ? <ProblemList problems={name === 'bookmarks' ? filtered.map((problem) => ({ ...problem, bookmarked: true })) : filtered} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} /> : <EmptyState title={`No ${name} problems match these filters`} detail="Try All problems or change the selected filters." />}
     </>
   }
 
   const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
 }
 
 export default App

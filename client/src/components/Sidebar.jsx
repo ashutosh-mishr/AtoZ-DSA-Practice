@@ -45,19 +45,19 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle }) {
     <div className="flex items-center gap-3 px-3 lg:flex">
       <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none"><NavigationIcon name="code" /></div>
       <span className="font-semibold tracking-tight">DSA Practice</span>
-      <button type="button" onClick={() => setMobileOpen(false)} className="ml-auto grid h-9 w-9 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
+      <button type="button" onClick={() => setMobileOpen(false)} className="ml-auto grid h-9 w-9 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#242424] lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
     </div>
 
     <nav className="mt-8 space-y-1" aria-label="Primary navigation">
       {navigation.map((item) => (
-        <button key={item.label} type="button" onClick={() => navigate(item.view)} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${activeView === item.view ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'}`}>
+        <button key={item.label} type="button" onClick={() => navigate(item.view)} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${activeView === item.view ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white'}`}>
           <NavigationIcon name={item.icon} /><span>{item.label}</span>
         </button>
       ))}
     </nav>
 
     <div className="mt-auto pt-8">
-      <button type="button" onClick={onThemeToggle} className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}>
+      <button type="button" onClick={onThemeToggle} className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white" aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}>
         <NavigationIcon name={isDark ? 'sun' : 'moon'} /><span>{isDark ? 'Light mode' : 'Dark mode'}</span>
       </button>
     </div>
