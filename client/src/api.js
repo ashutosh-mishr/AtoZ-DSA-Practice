@@ -35,6 +35,7 @@ export const api = {
   getBookmarks: () => request('/bookmarks'),
   getStreaks: (date) => request(`/streaks?date=${encodeURIComponent(date)}`),
   getDailyQuote: (date) => request(`/daily-quote?date=${encodeURIComponent(date)}`),
+  getSolution: (id) => request(`/problems/${id}/solution`),
   getProblems: (params = {}) => {
     const search = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {

@@ -159,6 +159,67 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
   response.json(result.rows.map(mapProblem))
 }))
 
+app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => {
+  const problemId = getIdOrSendBadRequest(request, response)
+  if (!problemId) return
+
+  const result = await pool.query(
+    `SELECT p.id, p.source_problem_id, p.title, p.difficulty, p.pattern, p.leetcode_url, p.gfg_url, p.youtube_url, p.article_url,
+            p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
+            (b.problem_id IS NOT NULL) AS bookmarked,
+            t.id AS topic_id, t.name AS topic, s.id AS subtopic_id, s.name AS subtopic,
+            COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision,
+            ps.problem_statement AS solution_problem_statement,
+            ps.examples AS solution_examples,
+            ps.brute_force AS solution_brute_force,
+            ps.better_approach AS solution_better_approach,
+            ps.optimal_approach AS solution_optimal_approach,
+            ps.code AS solution_code,
+            ps.code_language AS solution_code_language,
+            ps.video_url AS solution_video_url,
+            ps.source_repository AS solution_source_repository,
+            ps.source_file AS solution_source_file,
+            ps.mapping_confidence AS solution_mapping_confidence
+     FROM problems p
+     JOIN subtopics s ON s.id = p.subtopic_id
+     JOIN topics t ON t.id = s.topic_id
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id
+     LEFT JOIN bookmarks b ON b.problem_id = p.id
+     LEFT JOIN problem_solutions ps ON ps.problem_id = p.id
+     WHERE p.id = $1`,
+    [problemId],
+  )
+
+  if (result.rowCount === 0) {
+    sendError(response, 404, 'not_found', 'Problem not found.')
+    return
+  }
+
+  const row = result.rows[0]
+  const problem = mapProblem(row)
+  const hasSolution = Boolean(row.solution_problem_statement || row.solution_examples || row.solution_brute_force || row.solution_better_approach || row.solution_optimal_approach || row.solution_code || row.solution_video_url)
+
+  response.json({
+    problem,
+    solution: hasSolution ? {
+      available: true,
+      problem_statement: row.solution_problem_statement || '',
+      examples: row.solution_examples || '',
+      brute_force: row.solution_brute_force || '',
+      better_approach: row.solution_better_approach || '',
+      optimal_approach: row.solution_optimal_approach || '',
+      code: row.solution_code || '',
+      code_language: row.solution_code_language || 'C++',
+      video_url: row.solution_video_url || null,
+      source_repository: row.solution_source_repository || null,
+      source_file: row.solution_source_file || null,
+      mapping_confidence: row.solution_mapping_confidence === null || row.solution_mapping_confidence === undefined
+        ? null
+        : Number(row.solution_mapping_confidence),
+    } : { available: false },
+  })
+}))
+
 app.get('/api/problems/:id', asyncHandler(async (request, response) => {
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return

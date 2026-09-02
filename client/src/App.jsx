@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar'
 import TopicTable from './components/TopicTable'
 import PracticePage from './components/PracticePage'
 import StreakPage from './components/StreakPage'
+import SolutionPage from './components/SolutionPage'
 
 function LoadingState() {
   return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">Loading your practice data…</div>
@@ -45,7 +46,7 @@ function EmptyState({ title, detail }) {
 
 function routeFor(view, topic = null) {
   if (view === 'topic' && topic) return `/topic/${topic.id}`
-  return view === 'dashboard' ? '/' : `/${view}`
+  return view === 'dashboard' ? '/dashboard' : `/${view}`
 }
 
 function getRoute() {
@@ -53,6 +54,8 @@ function getRoute() {
   const topicMatch = path.match(/^\/topic\/(\d+)$/)
   if (topicMatch) return { view: 'topic', topicId: Number(topicMatch[1]) }
   const view = path.slice(1)
+  const solutionMatch = path.match(/^\/solution\/(\d+)$/)
+  if (solutionMatch) return { view: 'solution', problemId: Number(solutionMatch[1]) }
   return { view: ['roadmap', 'revision', 'bookmarks', 'practice', 'streaks'].includes(view) ? view : 'dashboard' }
 }
 
@@ -69,6 +72,7 @@ function Breadcrumbs({ items }) {
 function App() {
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
   const [view, setView] = useState(() => getRoute().view)
+  const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
   const [roadmapSearch, setRoadmapSearch] = useState('')
   const [roadmapProblems, setRoadmapProblems] = useState([])
   const [topicStatusFilter, setTopicStatusFilter] = useState('all')
@@ -122,6 +126,7 @@ function App() {
     }
     window.history.pushState({}, '', routeFor(nextView))
     setSelectedTopic(null)
+    setSolutionProblemId(null)
     setView(nextView)
   }
 
@@ -160,6 +165,7 @@ function App() {
         if (topic) loadTopicProblems(topic, { updateUrl: false })
       } else {
         setSelectedTopic(null)
+        setSolutionProblemId(route.view === 'solution' ? route.problemId : null)
         setView(route.view)
       }
     }
@@ -431,7 +437,7 @@ function App() {
     </>
   }
 
-  const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
+  const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={handleStatusChange} onRevisionChange={handleRevisionChange} onBookmarkChange={handleBookmarkChange} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
   return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
 }
