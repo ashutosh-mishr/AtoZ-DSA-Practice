@@ -34,9 +34,20 @@ function EditIcon() {
   return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
 }
 
-function ExternalLink({ href, children, primary = false }) {
+function ArticleIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z" /><path d="M14 3v4h4" /><path d="M9 12h6M9 16h5" /></svg>
+}
+
+function ExternalLink({ href, label, tone = 'default', iconOnly = false, children }) {
   if (!href) return null
-  return <a href={href} target="_blank" rel="noopener noreferrer" className={`rounded-md px-2 py-1 text-xs font-semibold ${primary ? 'bg-violet-600 text-white hover:bg-violet-700' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`}>{children}</a>
+  const tones = {
+    leetcode: 'border-violet-500/40 bg-violet-500/10 text-violet-700 hover:bg-violet-500/20 dark:text-violet-200',
+    gfg: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200',
+    article: 'border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-200',
+    youtube: 'border-rose-500/40 bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-200',
+    default: 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+  }
+  return <a href={href} target="_blank" rel="noopener noreferrer" title={label} aria-label={label} className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${iconOnly ? 'w-8 px-0' : ''} ${tones[tone] || tones.default}`}>{children || label}</a>
 }
 
 function PatternPopover({ problem, onClose }) {
@@ -107,7 +118,7 @@ function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionCha
               <td className="px-4 py-4 text-center"><button type="button" title={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} aria-label={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(problem)} disabled={updatingId === problem.id} className="inline-flex h-8 w-8 cursor-pointer items-center justify-center border-0 bg-transparent disabled:cursor-wait disabled:opacity-50"><BookmarkIcon active={problem.bookmarked} /></button></td>
               <td className="px-4 py-4 text-center"><IconButton label={problem.revision ? 'Remove from revision' : 'Add to revision'} tone="blue" active={problem.revision} onClick={() => toggleRevision(problem)} disabled={updatingId === problem.id}><RevisionIcon active={problem.revision} /></IconButton></td>
               <td className="relative px-4 py-4 text-center"><IconButton label="View pattern and hint" active={openPatternId === problem.id} onClick={() => setOpenPatternId((current) => current === problem.id ? null : problem.id)}><InfoIcon /></IconButton>{openPatternId === problem.id && <PatternPopover problem={problem} onClose={() => setOpenPatternId(null)} />}</td>
-              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} primary>LeetCode</ExternalLink><ExternalLink href={problem.gfg_url}>GFG</ExternalLink><ExternalLink href={problem.article_url}>TUF</ExternalLink><ExternalLink href={problem.youtube_url}>YouTube</ExternalLink><button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"><EditIcon /></button></div></td>
+              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></ExternalLink><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" /><button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"><EditIcon /></button></div></td>
             </tr>)}
           </tbody>
         </table>

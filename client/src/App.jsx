@@ -15,6 +15,22 @@ function ErrorState({ message, onRetry }) {
   return <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-900/50 dark:bg-rose-950/30"><p className="font-medium text-rose-800 dark:text-rose-200">Unable to load practice data</p><p className="mt-1 text-sm text-rose-700 dark:text-rose-300">{message}</p><button type="button" onClick={onRetry} className="mt-4 cursor-pointer rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white hover:bg-rose-800">Try again</button></div>
 }
 
+function ArticleIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z" /><path d="M14 3v4h4" /><path d="M9 12h6M9 16h5" /></svg>
+}
+
+function PracticeLink({ href, label, tone = 'default', iconOnly = false, children }) {
+  if (!href) return null
+  const tones = {
+    leetcode: 'border-violet-500/40 bg-violet-500/10 text-violet-700 hover:bg-violet-500/20 dark:text-violet-200',
+    gfg: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200',
+    article: 'border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-200',
+    youtube: 'border-rose-500/40 bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-200',
+    default: 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800',
+  }
+  return <a href={href} target="_blank" rel="noreferrer" title={label} aria-label={label} className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition-colors ${iconOnly ? 'w-8 px-0' : ''} ${tones[tone] || tones.default}`}>{children || label}</a>
+}
+
 function EmptyState({ title, detail }) {
   return <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900"><h2 className="font-semibold">{title}</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{detail}</p></div>
 }
@@ -278,24 +294,27 @@ function App() {
 
       <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Dashboard progress">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Overall progress</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Overall Progress</p>
           <div className="mt-5 flex items-end justify-between gap-4"><span className="text-3xl font-semibold">{progress.completion_percentage}%</span><span className="text-sm text-slate-500 dark:text-slate-400">{progress.solved} / {progress.total} solved</span></div>
           <ProgressBar value={progress.completion_percentage} className="mt-4" />
         </div>
 
         {[
-          ['Current streak', `${streakSummary?.current_streak ?? 0} ${(streakSummary?.current_streak ?? 0) === 1 ? 'day' : 'days'}`, '🔥'],
-          ['Longest streak', `${streakSummary?.longest_streak ?? 0} ${(streakSummary?.longest_streak ?? 0) === 1 ? 'day' : 'days'}`, '🏆'],
-          ['Active days', streakSummary?.active_days ?? 0, '✓'],
+          ['Current Streak', `${streakSummary?.current_streak ?? 0} ${(streakSummary?.current_streak ?? 0) === 1 ? 'day' : 'days'}`, '🔥'],
+          ['Longest Streak', `${streakSummary?.longest_streak ?? 0} ${(streakSummary?.longest_streak ?? 0) === 1 ? 'day' : 'days'}`, '🏆'],
+          ['Active Days', streakSummary?.active_days ?? 0, '✓'],
         ].map(([label, value, icon]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p><span className="text-base text-violet-500" aria-hidden="true">{icon}</span></div><p className="mt-4 text-2xl font-semibold">{value}</p></article>)}
 
-        <article className="rounded-2xl border border-violet-200 bg-white p-5 shadow-sm dark:border-violet-900/50 dark:bg-slate-900">
-          <div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">Revision & bookmarks</p><span className="text-base text-violet-500" aria-hidden="true">★</span></div>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div><p className="text-2xl font-semibold">{revisionCount}</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Revision</p></div>
-            <div><p className="text-2xl font-semibold">{bookmarkCount}</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Bookmarks</p></div>
-          </div>
-        </article>
+        <div className="grid grid-cols-2 gap-3">
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+            <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">Revision</p><span className="text-base text-sky-400" aria-hidden="true">↻</span></div>
+            <p className="mt-4 text-2xl font-semibold">{revisionCount}</p>
+          </article>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
+            <div className="flex items-center justify-between gap-2"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">Bookmarks</p><span className="text-base text-amber-400" aria-hidden="true">★</span></div>
+            <p className="mt-4 text-2xl font-semibold">{bookmarkCount}</p>
+          </article>
+        </div>
 
         {difficultyCards}
       </section>
@@ -335,7 +354,7 @@ function App() {
                   <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{problem.topic?.name || '—'}</td>
                   <td className="px-5 py-4 text-slate-500 dark:text-slate-400">{problem.subtopic?.name || '—'}</td>
                   <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${problem.difficulty === 'easy' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : problem.difficulty === 'medium' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{problem.difficulty}</span></td>
-                  <td className="px-5 py-4 text-center">{problem.status === 'solved' ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">Solved</span> : <span className="text-slate-400">—</span>}</td><td className="px-5 py-4"><div className="flex flex-wrap gap-1">{problem.leetcode_url && <a href={problem.leetcode_url} target="_blank" rel="noreferrer" className="rounded-md bg-violet-600 px-2 py-1 text-xs font-semibold text-white">LeetCode</a>}{problem.gfg_url && <a href={problem.gfg_url} target="_blank" rel="noreferrer" className="rounded-md px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">GFG</a>}{problem.article_url && <a href={problem.article_url} target="_blank" rel="noreferrer" className="rounded-md px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">TUF</a>}{problem.youtube_url && <a href={problem.youtube_url} target="_blank" rel="noreferrer" className="rounded-md px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">YouTube</a>}</div></td>
+                  <td className="px-5 py-4 text-center">{problem.status === 'solved' ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">Solved</span> : <span className="text-slate-400">—</span>}</td><td className="px-5 py-4"><div className="flex flex-wrap gap-1.5">{problem.leetcode_url && <PracticeLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" />}{problem.gfg_url && <PracticeLink href={problem.gfg_url} label="GFG" tone="gfg" />}{problem.article_url && <PracticeLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></PracticeLink>}{problem.youtube_url && <PracticeLink href={problem.youtube_url} label="YouTube" tone="youtube" />}</div></td>
                 </tr>
               })}
             </tbody>
