@@ -78,6 +78,7 @@ function mapProblem(row) {
     topic: { id: Number(row.topic_id), name: row.topic },
     subtopic: { id: Number(row.subtopic_id), name: row.subtopic },
     status: row.status,
+    has_solution: Boolean(row.has_solution),
   }
 }
 
@@ -149,7 +150,15 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
             p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
             (b.problem_id IS NOT NULL) AS bookmarked,
             t.id AS topic_id, t.name AS topic, s.id AS subtopic_id, s.name AS subtopic,
-            COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision
+            COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision,
+            EXISTS (SELECT 1 FROM problem_solutions ps WHERE ps.problem_id = p.id
+                    AND (NULLIF(BTRIM(ps.problem_statement), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.examples), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id
      LEFT JOIN bookmarks b ON b.problem_id = p.id ${whereClause}
@@ -228,7 +237,15 @@ app.get('/api/problems/:id', asyncHandler(async (request, response) => {
             p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
             (b.problem_id IS NOT NULL) AS bookmarked,
             t.id AS topic_id, t.name AS topic, s.id AS subtopic_id, s.name AS subtopic,
-            COALESCE(pp.status, 'not_started') AS status, n.content AS note, (b.problem_id IS NOT NULL) AS bookmarked
+            COALESCE(pp.status, 'not_started') AS status, n.content AS note, (b.problem_id IS NOT NULL) AS bookmarked,
+            EXISTS (SELECT 1 FROM problem_solutions ps WHERE ps.problem_id = p.id
+                    AND (NULLIF(BTRIM(ps.problem_statement), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.examples), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN notes n ON n.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id
      WHERE p.id = $1`,
@@ -386,7 +403,15 @@ app.get('/api/revision', asyncHandler(async (_request, response) => {
             p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
             (b.problem_id IS NOT NULL) AS bookmarked,
             t.id AS topic_id, t.name AS topic, s.id AS subtopic_id, s.name AS subtopic,
-            COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision
+            COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision,
+            EXISTS (SELECT 1 FROM problem_solutions ps WHERE ps.problem_id = p.id
+                    AND (NULLIF(BTRIM(ps.problem_statement), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.examples), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      JOIN problem_progress pp ON pp.problem_id = p.id AND pp.revision = TRUE
      LEFT JOIN bookmarks b ON b.problem_id = p.id
@@ -417,7 +442,15 @@ app.get('/api/bookmarks', asyncHandler(async (_request, response) => {
             (b.problem_id IS NOT NULL) AS bookmarked,
             t.id AS topic_id, t.name AS topic, s.id AS subtopic_id, s.name AS subtopic,
             COALESCE(pp.status, 'not_started') AS status, COALESCE(pp.revision, FALSE) AS revision, b.created_at AS bookmarked_at,
-            TRUE AS bookmarked
+            TRUE AS bookmarked,
+            EXISTS (SELECT 1 FROM problem_solutions ps WHERE ps.problem_id = p.id
+                    AND (NULLIF(BTRIM(ps.problem_statement), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.examples), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
+                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
      FROM bookmarks b JOIN problems p ON p.id = b.problem_id JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id ORDER BY b.created_at DESC`,
   )
