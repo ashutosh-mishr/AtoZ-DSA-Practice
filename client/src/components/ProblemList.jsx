@@ -55,7 +55,7 @@ function ExternalLink({ href, label, tone = 'default', iconOnly = false, childre
 }
 
 function SolutionLink({ problem }) {
-  return <a href={`/solution/${problem.id}`} title={`View solution for ${problem.title}`} aria-label={`View solution for ${problem.title}`} className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-500/20 dark:text-cyan-200">Solution</a>
+  return <a href={`/solution/${problem.id}`} target="_blank" rel="noopener noreferrer" title={`View solution for ${problem.title}`} aria-label={`View solution for ${problem.title}`} className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-500/20 dark:text-cyan-200">Solution</a>
 }
 
 function PatternPopover({ problem, onClose }) {
