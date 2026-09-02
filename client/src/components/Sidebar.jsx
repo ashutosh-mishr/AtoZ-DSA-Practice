@@ -42,10 +42,12 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle }) {
   }
 
   const navigationContent = <>
-    <div className="flex items-center gap-3 px-3 lg:flex">
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none"><NavigationIcon name="code" /></div>
-      <span className="font-semibold tracking-tight">DSA Practice</span>
-      <button type="button" onClick={() => setMobileOpen(false)} className="ml-auto grid h-9 w-9 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#242424] lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
+    <div className="flex items-center gap-3 px-3">
+      <button type="button" onClick={() => navigate('dashboard')} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl py-1 text-left hover:bg-slate-50 dark:hover:bg-[#242424]" title="Go to Dashboard" aria-label="Go to Dashboard">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none"><NavigationIcon name="code" /></div>
+        <span className="font-semibold tracking-tight">DSA Practice</span>
+      </button>
+      <button type="button" onClick={() => setMobileOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#242424] lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
     </div>
 
     <nav className="mt-8 space-y-1" aria-label="Primary navigation">
@@ -64,7 +66,7 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle }) {
   </>
 
   return <>
-    <button type="button" onClick={() => setMobileOpen(true)} className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-lg dark:border-[#2a2a2a] dark:bg-[#1b1b1b] dark:text-slate-200 lg:hidden" aria-label="Open navigation menu"><NavigationIcon name="menu" /></button>
+    <button type="button" onClick={() => setMobileOpen(true)} className="absolute left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-lg dark:border-[#2a2a2a] dark:bg-[#1b1b1b] dark:text-slate-200 lg:hidden" aria-label="Open navigation menu"><NavigationIcon name="menu" /></button>
     {mobileOpen ? <button type="button" aria-label="Close navigation overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[1px] lg:hidden" /> : null}
     <aside className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white px-4 py-6 shadow-2xl transition-transform duration-200 dark:border-[#2a2a2a] dark:bg-[#1b1b1b] lg:inset-y-0 lg:right-auto lg:z-20 lg:w-64 lg:translate-x-0 lg:shadow-none ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex h-full flex-col">{navigationContent}</div>

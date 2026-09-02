@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import NoteModal from './NoteModal'
 
 function Breadcrumbs({ problem }) {
   return <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-1 text-sm">
@@ -59,7 +60,7 @@ function parseImportedStatement(raw) {
 }
 
 function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkChange }) {
-  const [data,setData]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('')
+  const [data,setData]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(''); const [notingProblem,setNotingProblem]=useState(null)
   useEffect(()=>{let cancelled=false; async function load(){setLoading(true);setError('');try{const result=await api.getSolution(problemId);if(!cancelled)setData(result)}catch(e){if(!cancelled)setError(e.message||'Unable to load the solution.')}finally{if(!cancelled)setLoading(false)}} if(problemId)load(); return()=>{cancelled=true}},[problemId])
   if(loading)return <div className="rounded-xl border border-slate-300 bg-white p-8 text-center text-sm text-slate-500 dark:border-[#333333] dark:bg-[#181818] dark:text-slate-400">Loading solution…</div>
   if(error)return <div className="rounded-xl border border-rose-900/50 bg-rose-950/20 p-6 text-sm text-rose-300">{error}</div>
@@ -68,7 +69,8 @@ function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkC
   async function toggleStatus(){const next=problem.status==='solved'?'not_started':'solved';await onStatusChange(problem.id,next);setData(c=>({...c,problem:{...c.problem,status:next}}))}
   async function toggleBookmark(){const active=Boolean(problem.bookmarked);await onBookmarkChange(problem.id,active);setData(c=>({...c,problem:{...c.problem,bookmarked:!active}}))}
   async function toggleRevision(){const active=Boolean(problem.revision);await onRevisionChange(problem.id,!active);setData(c=>({...c,problem:{...c.problem,revision:!active}}))}
-  if(!solution?.available)return <><Breadcrumbs problem={problem}/><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{problem.title}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400 capitalize">{problem.difficulty} · {problem.topic?.name||'DSA'}</p><div className="mt-8 min-h-[420px] rounded-xl border border-slate-300 bg-white dark:border-[#333333] dark:bg-[#181818]" /></>
+  const notesButton = <button type="button" onClick={()=>setNotingProblem(problem)} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Notes</button>
+  if(!solution?.available)return <><Breadcrumbs problem={problem}/><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{problem.title}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400 capitalize">{problem.difficulty} · {problem.topic?.name||'DSA'}</p>{notesButton}{notingProblem && <NoteModal problem={notingProblem} onClose={() => setNotingProblem(null)} />}</>
   const parsed = parseImportedStatement(solution.problem_statement)
   const problemStatement = cleanSectionText(parsed.statement || solution.problem_statement)
   const examples = cleanSectionText(solution.examples || parsed.examples)
@@ -85,7 +87,7 @@ function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkC
       {time ? <Section title="Time Complexity"><TextBlock text={time}/></Section> : null}
       {space ? <Section title="Space Complexity"><TextBlock text={space}/></Section> : null}
     </div>
-    <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-5 dark:border-[#333333]">{problem.leetcode_url?<a href={problem.leetcode_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-violet-500/40 bg-violet-500/10 px-2.5 text-xs font-semibold text-violet-700 hover:bg-violet-500/20 dark:text-violet-200">LeetCode</a>:null}{problem.gfg_url?<a href={problem.gfg_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200">GFG</a>:null}{problem.article_url?<a href={problem.article_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-200">TUF</a>:null}{problem.youtube_url?<a href={problem.youtube_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 text-xs font-semibold text-rose-700 hover:bg-rose-500/20 dark:text-rose-200">YouTube</a>:null}</div>
+    <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-5 dark:border-[#333333]">{problem.leetcode_url?<a href={problem.leetcode_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-violet-500/40 bg-violet-500/10 px-2.5 text-xs font-semibold text-violet-700 hover:bg-violet-500/20 dark:text-violet-200">LeetCode</a>:null}{problem.gfg_url?<a href={problem.gfg_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200">GFG</a>:null}{problem.article_url?<a href={problem.article_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-200">TUF</a>:null}{problem.youtube_url?<a href={problem.youtube_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 text-xs font-semibold text-rose-700 hover:bg-rose-500/20 dark:text-rose-200">YouTube</a>:null}</div>{notesButton}{notingProblem && <NoteModal problem={notingProblem} onClose={() => setNotingProblem(null)} />}
   </>
 }
 export default SolutionPage

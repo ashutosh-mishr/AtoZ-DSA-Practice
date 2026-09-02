@@ -36,6 +36,8 @@ export const api = {
   getStreaks: (date) => request(`/streaks?date=${encodeURIComponent(date)}`),
   getDailyQuote: (date) => request(`/daily-quote?date=${encodeURIComponent(date)}`),
   getSolution: (id) => request(`/problems/${id}/solution`),
+  getNote: (id) => request(`/problems/${id}/note`),
+  saveNote: (id, content) => request(`/problems/${id}/note`, { method: 'PUT', body: JSON.stringify({ content }) }),
   getProblems: (params = {}) => {
     const search = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {

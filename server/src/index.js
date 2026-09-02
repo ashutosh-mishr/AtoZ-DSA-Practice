@@ -157,8 +157,7 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
                       OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id
      LEFT JOIN bookmarks b ON b.problem_id = p.id ${whereClause}
@@ -206,7 +205,7 @@ app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => 
 
   const row = result.rows[0]
   const problem = mapProblem(row)
-  const hasSolution = Boolean(row.solution_problem_statement || row.solution_examples || row.solution_brute_force || row.solution_better_approach || row.solution_optimal_approach || row.solution_code || row.solution_video_url)
+  const hasSolution = Boolean(row.solution_problem_statement || row.solution_examples || row.solution_brute_force || row.solution_better_approach || row.solution_optimal_approach || row.solution_code)
 
   response.json({
     problem,
@@ -219,7 +218,6 @@ app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => 
       optimal_approach: row.solution_optimal_approach || '',
       code: row.solution_code || '',
       code_language: row.solution_code_language || 'C++',
-      video_url: row.solution_video_url || null,
       source_repository: row.solution_source_repository || null,
       source_file: row.solution_source_file || null,
       mapping_confidence: row.solution_mapping_confidence === null || row.solution_mapping_confidence === undefined
@@ -244,8 +242,7 @@ app.get('/api/problems/:id', asyncHandler(async (request, response) => {
                       OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN notes n ON n.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id
      WHERE p.id = $1`,
@@ -410,8 +407,7 @@ app.get('/api/revision', asyncHandler(async (_request, response) => {
                       OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      JOIN problem_progress pp ON pp.problem_id = p.id AND pp.revision = TRUE
      LEFT JOIN bookmarks b ON b.problem_id = p.id
@@ -449,8 +445,7 @@ app.get('/api/bookmarks', asyncHandler(async (_request, response) => {
                       OR NULLIF(BTRIM(ps.brute_force), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.better_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL
-                      OR NULLIF(BTRIM(ps.video_url), '') IS NOT NULL)) AS has_solution
+                      OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM bookmarks b JOIN problems p ON p.id = b.problem_id JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
      LEFT JOIN problem_progress pp ON pp.problem_id = p.id ORDER BY b.created_at DESC`,
   )
