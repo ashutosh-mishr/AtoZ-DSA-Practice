@@ -21,7 +21,42 @@ function Section({ title, children }) {
   const [open,setOpen]=useState(false)
   return <section className="overflow-hidden rounded-xl border border-slate-300 bg-white dark:border-[#333333] dark:bg-[#181818]"><button type="button" onClick={()=>setOpen(v=>!v)} aria-expanded={open} className="flex w-full cursor-pointer items-center justify-between px-5 py-4 text-left text-sm font-semibold text-slate-800 hover:bg-slate-50 dark:text-slate-100 dark:hover:bg-[#222222]"><span>{title}</span><span className="text-lg leading-none text-slate-500 dark:text-slate-400">{open?'⌃':'⌄'}</span></button>{open?<div className="border-t border-slate-200 px-5 py-5 dark:border-[#333333]">{children}</div>:null}</section>
 }
-function TextBlock({ text }) { return <div className="whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-300">{text || 'Not available yet.'}</div> }
+function TextBlock({ text }) { return <div className="whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-300">{text}</div> }
+
+function cleanSectionText(text) {
+  return (text || '').trim()
+}
+
+function parseImportedStatement(raw) {
+  const source = raw || ''
+  if (!source.trim()) return { statement: '', examples: '', approach: '', time: '', space: '' }
+  const examplesMarker = /\n?Example\s+1\s*:/i
+  const approachMarker = /\n?APPROACH\s*:-/i
+  const timeMarker = /\n?Time\s+complexity\s+of\s+this\s+approach\s+is/i
+  const spaceMarker = /\n?Space\s+complexity\s+is/i
+  const codeMarker = /\n?CODE\s*:-/i
+  const examplesMatch = examplesMarker.exec(source)
+  const approachMatch = approachMarker.exec(source)
+  const timeMatch = timeMarker.exec(source)
+  const spaceMatch = spaceMarker.exec(source)
+  const codeMatch = codeMarker.exec(source)
+
+  const statementEnd = examplesMatch?.index ?? approachMatch?.index ?? timeMatch?.index ?? spaceMatch?.index ?? codeMatch?.index ?? source.length
+  const statement = source.slice(0, statementEnd).trim()
+  const examples = examplesMatch
+    ? source.slice(examplesMatch.index, approachMatch?.index ?? timeMatch?.index ?? spaceMatch?.index ?? codeMatch?.index ?? source.length).trim()
+    : ''
+  const approach = approachMatch
+    ? source.slice(approachMatch.index + approachMatch[0].length, timeMatch?.index ?? spaceMatch?.index ?? codeMatch?.index ?? source.length).trim()
+    : ''
+  const time = timeMatch
+    ? source.slice(timeMatch.index, spaceMatch?.index ?? codeMatch?.index ?? source.length).trim()
+    : ''
+  const space = spaceMatch
+    ? source.slice(spaceMatch.index, codeMatch?.index ?? source.length).trim()
+    : ''
+  return { statement, examples, approach, time, space }
+}
 
 function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkChange }) {
   const [data,setData]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('')
@@ -34,16 +69,21 @@ function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkC
   async function toggleBookmark(){const active=Boolean(problem.bookmarked);await onBookmarkChange(problem.id,active);setData(c=>({...c,problem:{...c.problem,bookmarked:!active}}))}
   async function toggleRevision(){const active=Boolean(problem.revision);await onRevisionChange(problem.id,!active);setData(c=>({...c,problem:{...c.problem,revision:!active}}))}
   if(!solution?.available)return <><Breadcrumbs problem={problem}/><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{problem.title}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400 capitalize">{problem.difficulty} · {problem.topic?.name||'DSA'}</p><div className="mt-8 min-h-[420px] rounded-xl border border-slate-300 bg-white dark:border-[#333333] dark:bg-[#181818]" /></>
-  const videoUrl=solution.video_url||problem.youtube_url
+  const parsed = parseImportedStatement(solution.problem_statement)
+  const problemStatement = cleanSectionText(parsed.statement || solution.problem_statement)
+  const examples = cleanSectionText(solution.examples || parsed.examples)
+  const approach = cleanSectionText(parsed.approach || solution.optimal_approach || solution.better_approach || solution.brute_force)
+  const time = cleanSectionText(parsed.time)
+  const space = cleanSectionText(parsed.space)
+  const code = cleanSectionText(solution.code)
   return <><Breadcrumbs problem={problem}/><div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-6 dark:border-[#333333]"><div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"><div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{problem.title}</h1><div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400"><span className="capitalize">{problem.difficulty}</span>{problem.pattern?<><span>·</span><span>{problem.pattern}</span></>:null}</div></div><div className="flex flex-wrap gap-2"><StatusButton problem={problem} onStatusChange={toggleStatus}/><BookmarkButton problem={problem} onBookmarkChange={toggleBookmark}/><RevisionButton problem={problem} onRevisionChange={toggleRevision}/></div></div></div>
-    <section className="mb-4"><h2 className="mb-3 text-lg font-semibold">Problem Statement</h2><TextBlock text={solution.problem_statement}/></section>
+    {problemStatement ? <section className="mb-4"><h2 className="mb-3 text-lg font-semibold">Problem Statement</h2><TextBlock text={problemStatement}/></section> : null}
     <div className="space-y-3">
-      {solution.examples?.trim() ? <Section title="Examples"><TextBlock text={solution.examples}/></Section> : null}
-      {(solution.brute_force?.trim() || problem.brute_force?.trim()) ? <Section title="Brute force Approach"><TextBlock text={solution.brute_force||problem.brute_force}/></Section> : null}
-      {solution.better_approach?.trim() ? <Section title="Better Approach"><TextBlock text={solution.better_approach}/></Section> : null}
-      {(solution.optimal_approach?.trim() || problem.optimal_approach?.trim()) ? <Section title="Optimal Approach"><TextBlock text={solution.optimal_approach||problem.optimal_approach}/></Section> : null}
-      {solution.code?.trim() ? <Section title={`Solution / Code${solution.code_language?` · ${solution.code_language}`:''}`}><div className="overflow-x-auto rounded-lg border border-slate-300 bg-slate-50 dark:border-[#333333] dark:bg-[#101010]"><pre className="min-w-max p-5 text-sm leading-6 text-slate-800 dark:text-slate-200"><code>{solution.code}</code></pre></div><button type="button" onClick={()=>navigator.clipboard?.writeText(solution.code)} className="mt-3 cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Copy code</button></Section> : null}
-      {videoUrl?.trim() ? <Section title="Video Solution"><div className="text-sm leading-7 text-slate-700 dark:text-slate-300"><a href={videoUrl} target="_blank" rel="noreferrer" className="font-semibold text-violet-600 hover:text-violet-500 dark:text-violet-300">Watch video solution on YouTube</a></div></Section> : null}
+      {examples ? <Section title="Examples"><TextBlock text={examples}/></Section> : null}
+      {approach ? <Section title="Approach"><TextBlock text={approach}/></Section> : null}
+      {code ? <Section title={`Solution / Code${solution.code_language?` · ${solution.code_language}`:''}`}><div className="overflow-x-auto rounded-lg border border-slate-300 bg-slate-50 dark:border-[#333333] dark:bg-[#101010]"><pre className="min-w-max p-5 text-sm leading-6 text-slate-800 dark:text-slate-200"><code>{code}</code></pre></div><button type="button" onClick={()=>navigator.clipboard?.writeText(code)} className="mt-3 cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Copy code</button></Section> : null}
+      {time ? <Section title="Time Complexity"><TextBlock text={time}/></Section> : null}
+      {space ? <Section title="Space Complexity"><TextBlock text={space}/></Section> : null}
     </div>
     <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-5 dark:border-[#333333]">{problem.leetcode_url?<a href={problem.leetcode_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-violet-500/40 bg-violet-500/10 px-2.5 text-xs font-semibold text-violet-700 hover:bg-violet-500/20 dark:text-violet-200">LeetCode</a>:null}{problem.gfg_url?<a href={problem.gfg_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-200">GFG</a>:null}{problem.article_url?<a href={problem.article_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 text-xs font-semibold text-amber-700 hover:bg-amber-500/20 dark:text-amber-200">TUF</a>:null}{problem.youtube_url?<a href={problem.youtube_url} target="_blank" rel="noreferrer" className="inline-flex h-8 items-center justify-center rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 text-xs font-semibold text-rose-700 hover:bg-rose-500/20 dark:text-rose-200">YouTube</a>:null}</div>
   </>

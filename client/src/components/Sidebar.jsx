@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react'
 const navigation = [
   { label: 'Dashboard', view: 'dashboard', icon: 'grid' },
   { label: 'DSA Roadmap', view: 'roadmap', icon: 'map' },
-  { label: 'Revision', view: 'revision', icon: 'refresh' },
-  { label: 'Bookmarks', view: 'bookmarks', icon: 'bookmark' },
+  { label: 'Streak', view: 'streaks', icon: 'flame' },
   { label: 'Practice', view: 'practice', icon: 'play' },
-  { label: 'Streaks', view: 'streaks', icon: 'flame' },
+  { label: 'Bookmark', view: 'bookmarks', icon: 'bookmark' },
+  { label: 'Revision', view: 'revision', icon: 'refresh' },
 ]
 
 function NavigationIcon({ name }) {
