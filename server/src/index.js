@@ -183,8 +183,9 @@ app.get('/api/progress', asyncHandler(async (_request, response) => {
     `SELECT COUNT(*) AS total,
             COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'solved') AS solved,
             COUNT(*) FILTER (WHERE COALESCE(pp.revision, FALSE)) AS revision,
-            COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'not_started') AS not_started
-     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id`,
+            COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'not_started') AS not_started,
+            COUNT(b.problem_id) AS bookmarks
+     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id`,
   )
   const topicResult = await pool.query(
     `SELECT t.id, t.name, COUNT(p.id) AS total,
@@ -207,7 +208,7 @@ app.get('/api/progress', asyncHandler(async (_request, response) => {
   const difficulty = { easy: { total: 0, solved: 0 }, medium: { total: 0, solved: 0 }, hard: { total: 0, solved: 0 } }
   difficultyResult.rows.forEach((row) => { if (difficulty[row.difficulty]) { difficulty[row.difficulty] = { total: Number(row.total), solved: Number(row.solved) } } })
   response.json({
-    total, solved, revision: Number(totals.revision), not_started: Number(totals.not_started),
+    total, solved, revision: Number(totals.revision), not_started: Number(totals.not_started), bookmarks: Number(totals.bookmarks),
     completion_percentage: total === 0 ? 0 : Number(((solved / total) * 100).toFixed(2)),
     difficulty,
     topics: topicResult.rows.map((topic) => {
