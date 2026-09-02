@@ -1,0 +1,1552 @@
+[
+  {
+    "quote_text": "One solved problem today makes tomorrow's problem easier.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Consistency beats intensity when the goal is lasting skill.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A difficult problem is often a collection of smaller problems waiting to be separated.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every wrong answer can point toward a better question.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Read the constraint before you read the code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When an approach feels slow, look for the information it is recomputing.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Good algorithms save work by refusing to repeat it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A clean invariant can turn a confusing loop into a simple proof.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Practice is where intuition earns its accuracy.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best shortcut is understanding why the long way works.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you can explain the state, you are closer to explaining the solution.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Start with the simplest correct idea, then measure what makes it slow.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A failed test is feedback, not a verdict.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Small improvements in thinking compound just like small improvements in code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The goal is not to memorize patterns; it is to recognize when they apply.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Constraints are clues disguised as limits.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Before optimizing code, optimize your understanding of the problem.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A bug is often a broken assumption made visible.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Strong problem solving begins with precise questions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If the solution feels magical, find the invariant hiding underneath it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One careful dry run can reveal what ten hurried edits cannot.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Complexity is the cost of repeating work you could have avoided.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The fastest path through a problem often starts with a slower, clearer sketch.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A useful pattern is a remembered idea with a reason attached to it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Progress in DSA is measured in better decisions, not just more solved boxes.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When stuck, reduce the problem until the structure becomes visible.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "An example is not the proof, but it can reveal the proof's shape.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best debugging tool is a precise mental model.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Solve for correctness first; solve for elegance second.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A new problem becomes familiar when you can name its structure.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every edge case is an invitation to clarify your invariant.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Good code follows from good decomposition.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you cannot find the pattern, inspect what changes and what stays fixed.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Time complexity is a story about how work grows.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Space complexity is a reminder that memory is also a resource.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A stack is not just a data structure; it is a way to remember the right order.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A queue is a simple promise: first in, first out.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A hash table trades space for fast access when the problem allows it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A tree becomes easier when you decide what each node represents.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A graph becomes clearer when you define what its edges mean.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Dynamic programming starts by deciding what a state should remember.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Greedy solutions work when the local choice has a defensible global reason.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Binary search is powerful because it discards half the uncertainty at a time.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Two pointers work best when movement is justified by an invariant.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Sliding windows turn repeated range work into incremental work.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Recursion becomes manageable when every call has a smaller, well-defined job.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Backtracking is disciplined exploration with permission to undo.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Sorting can reveal structure that was invisible in the original order.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Bit manipulation rewards precision more than cleverness.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Heaps are useful when you repeatedly need the most important remaining item.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A trie stores prefixes so that shared beginnings do not have to be rediscovered.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Linked lists teach you that relationships matter more than positions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A problem statement is a contract; solve the contract, not your assumptions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Before coding, identify the input, output, constraints, and invariant.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you know what must remain true, your loop has a purpose.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good base case is a proof that recursion can stop safely.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a proof is hard, draw the state transitions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When code is tangled, separate data, decisions, and movement.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The first solution teaches you what the problem is really asking.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The second solution teaches you what can be improved.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The third explanation teaches you whether you truly understand it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A solution you can teach is a solution you are less likely to forget.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep a note of the mistake that cost you the most time; it is valuable data.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Review turns yesterday's struggle into today's shortcut.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Revision is not repeating a problem; it is testing whether the idea survived.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A short daily session is enough to keep the algorithmic muscle awake.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One honest attempt is more valuable than a passive hour of reading solutions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When you need a hint, ask for the smallest hint that moves you forward.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Look at the constraints again when your first approach feels too expensive.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If brute force is clear, you already have a reference point for optimization.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "An optimal solution often removes a repeated loop, lookup, or state.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do not fear an unfamiliar pattern; first ask what information it preserves.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The difference between guessing and reasoning is being able to justify the choice.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A diagram can make a graph problem smaller than its words.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A table can make a dynamic program visible.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A sorted view can make a greedy decision obvious.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A frequency map can make hidden repetition measurable.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A prefix can turn many range questions into one piece of preprocessing.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A monotonic structure can preserve exactly the information the next query needs.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "An invariant is a promise your algorithm keeps while everything else changes.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good test case attacks your assumptions, not your confidence.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Empty input is a question about your base case.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Duplicate input is a question about your definition of identity.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Large input is a question about your complexity.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Negative values are a question about whether your shortcut assumed positivity.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Sorted input is a question about whether order gives you an advantage.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Reverse-sorted input is a question about whether your algorithm depends on luck.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A single counterexample can be more useful than a hundred confirming examples.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If your explanation skips a step, your implementation may be skipping it too.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Name variables after the idea they carry, not the keyboard shortcut you used.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Readable code makes debugging a reasoning task instead of a guessing task.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best optimization is often deleting unnecessary work.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Measure complexity before you celebrate cleverness.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Elegant code is not code with fewer lines; it is code with fewer surprises.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A pattern should shorten your reasoning, not replace it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Learning DSA is learning to move from examples to abstractions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Abstraction is useful when it preserves what matters and hides what does not.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Practice makes patterns familiar; revision makes them reliable.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A roadmap gives direction, but the problem in front of you still deserves attention.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "You do not need to solve everything today; you need to keep the chain unbroken.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A streak is evidence of consistency, not a measure of intelligence.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One problem solved with understanding beats five solved by imitation.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When you are stuck, write down exactly what you know.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The next useful step is usually smaller than the whole solution.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Progress often looks like fewer wrong turns rather than faster typing.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A hard problem solved slowly can teach more than an easy problem solved automatically.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Use the simplest data structure that makes the invariant easy to maintain.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When choosing a data structure, ask which operation must become cheap.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The right data structure is often the one that matches the question.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need order, preserve order; if you need membership, optimize membership.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need minimums repeatedly, ask whether a heap can remember them for you.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need connectivity, ask whether a graph representation makes it explicit.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need overlapping subproblems, ask whether a state can cache the answer.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need a boundary, ask whether binary search can find it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need a range, ask whether a window can move instead of restart.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you need choices, ask whether greedy, DP, or backtracking fits the proof.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A constraint of one hundred often permits ideas that a million does not.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A constraint of a million often tells you what not to try.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Complexity analysis is part of the solution, not a footnote after it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best interview answer explains trade-offs before presenting code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "An interview problem is still a problem: clarify, reason, then implement.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Speak your invariant before you speak your syntax.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When an interviewer asks why, answer with the property your algorithm preserves.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Practice explaining the solution without looking at the code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A timed problem rewards preparation, but a reviewed problem creates preparation.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Track the pattern you missed; it tells you what to revise.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Bookmark the problem that taught you something you want to revisit.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Revision should target weak ideas, not just favorite problems.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A problem marked solved is a checkpoint; a problem remembered is a skill.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The purpose of a tracker is to make progress visible enough to continue.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Use your roadmap to choose what to learn next, not to compare yourself to others.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Your pace is less important than your ability to keep learning.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Consistency turns isolated solved problems into a connected skill set.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The habit is simple: show up, think, test, learn, repeat.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A small daily commitment can outperform occasional heroic sessions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do the problem before reading the solution; earn the hint.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you read the solution first, explain it back without looking.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A solution is not finished when it passes; it is finished when you understand why.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Tests confirm behavior; reasoning explains behavior.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A compiler can catch syntax, but only you can catch a bad idea.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Use logs to observe state, not to replace thought.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When debugging, change one assumption at a time.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Reproduce the bug before trying to fix the bug.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A minimal failing example is a powerful debugging shortcut.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A clean reset can reveal whether your fix solved the cause or the symptom.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If a fix feels mysterious, make the failure reproducible and inspect the state.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Good engineering is careful reasoning repeated consistently.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Small refactors are easier when the behavior is already understood.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do not optimize a path you cannot yet explain.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Clarity is a performance tool for the person maintaining the code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The strongest pattern recognition comes from comparing similar problems.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "After solving, ask which detail made the solution possible.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "After solving, ask what would break your approach.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "After solving, ask how the constraints would change your algorithm.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "After solving, ask whether you can solve it from memory tomorrow.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "After solving, write one sentence that captures the core idea.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One sentence of reflection can save ten minutes during revision.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The more precisely you describe a problem, the fewer wrong solutions you need to try.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good question often contains half of the solution.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If two approaches both work, compare their assumptions and costs.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Trade-offs become clearer when you name what each approach saves and spends.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Space can buy time; preprocessing can buy simpler queries.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Sorting can buy structure; hashing can buy access.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Caching can buy speed; it can also buy memory usage.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Choosing an algorithm is choosing which cost you can afford.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The constraints decide which trade-offs are acceptable.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do not confuse a familiar algorithm with a justified algorithm.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Use patterns as hypotheses, then prove them against the constraints.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A pattern becomes powerful when you know its failure conditions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Knowing when not to use an algorithm is part of knowing the algorithm.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A data structure is a tool; the problem decides whether it belongs in your toolbox.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every solved problem adds one more example to your mental library.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every reviewed problem strengthens the connection between examples.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every mistake gives you a new boundary for your reasoning.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The fastest learner is often the one who notices their own mistakes early.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do not hide confusion; turn it into a smaller question.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A focused twenty minutes can be more productive than an unfocused two hours.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When attention fades, simplify the task instead of abandoning the habit.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If today is busy, one problem is still a meaningful day.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A streak survives because the daily goal is small enough to keep.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Your future self benefits from every problem you understand today.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best time to revise a weak pattern is before you need it again.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Use yesterday's mistakes as today's warm-up questions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A tracker is most useful when it changes what you do next.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Progress becomes motivating when you can see both distance traveled and distance left.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Do not let an unfinished roadmap hide the problems you have already mastered.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A completed checkbox is useful; a learned idea is the real result.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The purpose of difficulty is to stretch your reasoning, not to label your ability.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Easy problems build fluency; medium problems build judgment; hard problems build depth.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Every level has something to teach when you solve it deliberately.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A hard problem often rewards the same basics used with more precision.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Fundamentals are not the beginning you leave behind; they are the tools you keep using.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Strong algorithms are built from ordinary ideas connected carefully.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The difference between a trick and a technique is repeatability.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A reusable technique is a solved idea waiting for a new context.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The more problems you compare, the easier it becomes to see their shared structure.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Similarity is a clue; verify it before you commit to a pattern.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good study session ends with a clearer next step.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Leave yourself a short note whenever a problem teaches a subtle lesson.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Your notes should help future-you restart the reasoning quickly.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The goal of revision is retrieval, not rereading.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Try to reconstruct the solution before checking your old notes.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you can derive it again, you own the idea.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Memory gets stronger when you retrieve before you review.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Spacing problems across days makes understanding more durable.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A little forgetting is useful because it makes retrieval practice possible.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Consistency is a strategy for making difficult learning feel ordinary.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A daily solve is a small vote for the developer you want to become.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep the next problem small enough to start.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Start before you feel ready; clarity often arrives during the attempt.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The first five minutes of a problem are often about finding the right question.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Write the brute force solution if it clarifies the search space.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Optimization is easier when you know exactly what brute force repeats.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When two loops repeat the same work, ask whether their results can be shared.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a query repeats, ask whether preprocessing can pay once and answer many times.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a choice repeats, ask whether a state can remember it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a boundary repeats, ask whether sorted structure can find it faster.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a path repeats, ask whether a graph search can avoid revisiting it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a prefix repeats, ask whether a trie or prefix structure can share it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When a maximum repeats, ask whether a monotonic structure can preserve it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When the same subproblem returns, cache it before solving it again.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When the order matters, make the order explicit in your state.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When the order does not matter, avoid carrying unnecessary order information.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The cleanest solution is often the one whose proof matches its implementation.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A proof that fits on paper is easier to trust in code.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If your code and explanation disagree, trust neither until you find the mismatch.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A reliable solution survives edge cases because its reasoning includes them.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Test the smallest input that can break your assumption.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Then test the largest input your constraints allow.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Then test the input that makes your algorithm work hardest.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Random tests find surprises; adversarial tests find assumptions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Practice is deliberate when you know what skill you are training.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Choose a problem because it teaches a pattern, not because it looks impressive.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Difficulty is feedback about the current challenge, not a permanent label.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep moving through the roadmap while making time to revisit weak spots.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The strongest progress combines new problems with old lessons.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A new problem tests discovery; a revision problem tests retention.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A bookmark can mark a useful lesson, not just an unfinished task.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A pattern hint should guide your thinking without taking the thinking away.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good hint narrows the search space while leaving the final insight to you.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "When you need help, ask for a direction before asking for the destination.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Learning accelerates when feedback arrives soon after the attempt.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The purpose of mistakes is not regret; it is calibration.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep your errors close enough to become better instincts.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A disciplined review turns random mistakes into recurring lessons.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The habit of reflection is part of the algorithmic skill.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One problem can teach a pattern; ten comparisons can teach when to use it.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Compare problems by their structure, not only by their titles.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A problem title tells you less than its constraints and required operations.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The best preparation is active: attempt, explain, test, revise.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep the loop simple: learn, solve, review, repeat.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A consistent learner compounds knowledge even when individual days feel small.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "You do not need a perfect session; you need a real one.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Today’s solved problem is tomorrow’s remembered pattern.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One question is enough to keep the learning habit alive.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A small win is still evidence that the process works.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Show up for the problem in front of you.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep solving until the idea becomes familiar, then keep revising until it becomes reliable.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Understanding grows quietly through repeated contact with good problems.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The roadmap is long, but the next problem is always one problem.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Progress is easier to sustain when the next action is obvious.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Let the tracker remind you where you are, not tell you who you are.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Your solved count is a measurement; your reasoning is the achievement.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Keep the metrics useful and the learning central.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A good streak supports the habit; it should never replace the habit.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "If you miss a day, restart the next day without turning one miss into a pattern.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "Consistency includes returning after interruptions.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "A broken streak is not a broken learning journey.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "The next active day is always available.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "One solved problem can restart momentum.",
+    "author": null,
+    "category": "original"
+  },
+  {
+    "quote_text": "It does not matter how slowly you go as long as you do not stop.",
+    "author": "Confucius",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The secret of getting ahead is getting started.",
+    "author": "Mark Twain",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The way to get started is to quit talking and begin doing.",
+    "author": "Walt Disney",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Genius is one percent inspiration and ninety-nine percent perspiration.",
+    "author": "Thomas Edison",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Believe you can and you're halfway there.",
+    "author": "Theodore Roosevelt",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Whether you think you can, or you think you can't—you're right.",
+    "author": "Henry Ford",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The only place success comes before work is in the dictionary.",
+    "author": "Vince Lombardi",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "It always seems impossible until it's done.",
+    "author": "Nelson Mandela",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Learning never exhausts the mind.",
+    "author": "Leonardo da Vinci",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Nothing in life is to be feared; it is only to be understood.",
+    "author": "Marie Curie",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Alone we can do so little; together we can do so much.",
+    "author": "Helen Keller",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "You miss 100% of the shots you don't take.",
+    "author": "Wayne Gretzky",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "I've failed over and over and over again in my life. And that is why I succeed.",
+    "author": "Michael Jordan",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Our greatest glory is not in never falling, but in rising every time we fall.",
+    "author": "Confucius",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "It is never too late to be what you might have been.",
+    "author": "George Eliot",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Well begun is half done.",
+    "author": "Aristotle",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Energy and persistence conquer all things.",
+    "author": "Benjamin Franklin",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Either you run the day or the day runs you.",
+    "author": "Jim Rohn",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The future depends on what you do today.",
+    "author": "Mahatma Gandhi",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Success is the sum of small efforts, repeated day in and day out.",
+    "author": "Robert Collier",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The journey of a thousand miles begins with one step.",
+    "author": "Lao Tzu",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Fall seven times and stand up eight.",
+    "author": "Japanese Proverb",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Great things are done by a series of small things brought together.",
+    "author": "Vincent van Gogh",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The expert in anything was once a beginner.",
+    "author": "Helen Hayes",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "author": "Winston Churchill",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "You have to expect things of yourself before you can do them.",
+    "author": "Michael Jordan",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Do what you can, with what you have, where you are.",
+    "author": "Theodore Roosevelt",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The mind is not a vessel to be filled, but a fire to be kindled.",
+    "author": "Plutarch",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "An investment in knowledge pays the best interest.",
+    "author": "Benjamin Franklin",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The beautiful thing about learning is that nobody can take it away from you.",
+    "author": "B. B. King",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Nothing will work unless you do.",
+    "author": "Maya Angelou",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "Start where you are. Use what you have. Do what you can.",
+    "author": "Arthur Ashe",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The best way out is always through.",
+    "author": "Robert Frost",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "If you want to go fast, go alone. If you want to go far, go together.",
+    "author": "African Proverb",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The important thing is not to stop questioning.",
+    "author": "Albert Einstein",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "I have not failed. I've just found 10,000 ways that won't work.",
+    "author": "Thomas Edison",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "The only way to do great work is to love what you do.",
+    "author": "Steve Jobs",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "What we learn with pleasure we never forget.",
+    "author": "Alfred Mercier",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "A person who never made a mistake never tried anything new.",
+    "author": "Albert Einstein",
+    "category": "attributed"
+  },
+  {
+    "quote_text": "You don't have to be great to start, but you have to start to be great.",
+    "author": "Zig Ziglar",
+    "category": "attributed"
+  }
+]
