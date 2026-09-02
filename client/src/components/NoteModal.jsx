@@ -3,10 +3,12 @@ import { api } from '../api'
 
 function NoteModal({ problem, onClose }) {
   const [note, setNote] = useState('')
+  const [originalNote, setOriginalNote] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -16,7 +18,12 @@ function NoteModal({ problem, onClose }) {
       setSaved(false)
       try {
         const result = await api.getNote(problem.id)
-        if (!cancelled) setNote(result?.content || '')
+        if (!cancelled) {
+          const content = result?.content || ''
+          setNote(content)
+          setOriginalNote(content)
+          setEditing(!content.trim())
+        }
       } catch (loadError) {
         if (!cancelled) setError(loadError.message || 'Unable to load note.')
       } finally {
@@ -33,7 +40,9 @@ function NoteModal({ problem, onClose }) {
     setSaved(false)
     try {
       await api.saveNote(problem.id, note)
+      setOriginalNote(note)
       setSaved(true)
+      setEditing(false)
     } catch (saveError) {
       setError(saveError.message || 'Unable to save note.')
     } finally {
@@ -41,7 +50,20 @@ function NoteModal({ problem, onClose }) {
     }
   }
 
-  const hasExistingNote = note.trim().length > 0
+  const hasExistingNote = originalNote.trim().length > 0
+
+  function startEditing() {
+    setEditing(true)
+    setSaved(false)
+    setError('')
+  }
+
+  function cancelEditing() {
+    setNote(originalNote)
+    setEditing(false)
+    setSaved(false)
+    setError('')
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
@@ -54,15 +76,16 @@ function NoteModal({ problem, onClose }) {
           <button type="button" title="Close notes" aria-label="Close notes" onClick={onClose} className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-xl leading-none text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-[#3a3a3a] dark:text-slate-300 dark:hover:bg-[#242424] dark:hover:text-white">×</button>
         </div>
         <div className="p-5">
-          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading note…</p> : <textarea autoFocus value={note} onChange={(event) => { setNote(event.target.value); setSaved(false); setError('') }} placeholder="Write your notes for this problem…" rows={9} className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100 dark:placeholder:text-slate-500" />}
+          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading note…</p> : <textarea autoFocus={editing} readOnly={!editing} value={note} onChange={(event) => { setNote(event.target.value); setSaved(false); setError('') }} placeholder="Write your notes for this problem…" rows={9} className={`w-full resize-y rounded-xl border px-4 py-3 text-sm leading-6 outline-none ${editing ? 'border-slate-200 bg-white text-slate-800 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100 dark:placeholder:text-slate-500' : 'cursor-default border-slate-200 bg-slate-50 text-slate-700 dark:border-[#333333] dark:bg-[#141414] dark:text-slate-300'}`} />}
           {error ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error}</p> : null}
           {saved ? <p className="mt-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">Note saved successfully.</p> : null}
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-[#303030]">
           <span className="text-xs text-slate-500 dark:text-slate-400">{hasExistingNote ? 'Existing note' : 'No note yet'}</span>
           <div className="flex gap-2">
+            {hasExistingNote && editing ? <button type="button" onClick={cancelEditing} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:text-slate-300 dark:hover:bg-[#242424]">Cancel edit</button> : null}
             <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:text-slate-300 dark:hover:bg-[#242424]">Cancel</button>
-            <button type="button" onClick={save} disabled={loading || saving} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : hasExistingNote ? 'Update Note' : 'Add New Note'}</button>
+            {hasExistingNote && !editing ? <button type="button" onClick={startEditing} disabled={loading || saving} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-wait disabled:opacity-60">Update Note</button> : <button type="button" onClick={save} disabled={loading || saving} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-wait disabled:opacity-60">{saving ? 'Saving…' : hasExistingNote ? 'Save Update' : 'Add New Note'}</button>}
           </div>
         </div>
       </div>
