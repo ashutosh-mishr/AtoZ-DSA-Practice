@@ -27,13 +27,13 @@ function StreakPage() {
     const activity = new Map((data?.activity || []).map((item) => [item.date, item.problems_solved]))
     const end = new Date(`${localDateKey()}T00:00:00`)
     const start = new Date(end)
-    start.setDate(start.getDate() - 364)
+    start.setDate(start.getDate() - 363)
     start.setDate(start.getDate() - start.getDay())
     const days = []
     const cursor = new Date(start)
     while (cursor <= end) {
       const key = localDateKey(cursor)
-      days.push({ date: key, count: activity.get(key) || 0, label: formatDay(cursor), month: cursor.getMonth(), year: cursor.getFullYear() })
+      days.push({ date: key, count: activity.get(key) || 0, label: formatDay(cursor) })
       cursor.setDate(cursor.getDate() + 1)
     }
     return days
@@ -41,14 +41,6 @@ function StreakPage() {
 
   const weeks = []
   for (let i = 0; i < calendar.length; i += 7) weeks.push(calendar.slice(i, i + 7))
-
-  const monthLabels = weeks.map((week, index) => {
-    const first = week[0]
-    const previous = index > 0 ? weeks[index - 1][0] : null
-    const changed = !previous || first.month !== previous.month || first.year !== previous.year
-    return changed ? new Intl.DateTimeFormat(undefined, { month: 'short' }).format(new Date(first.year, first.month, 1)) : ''
-  })
-
   const maxCount = Math.max(1, ...calendar.map((day) => day.count))
   const level = (count) => count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4))
 
@@ -70,15 +62,8 @@ function StreakPage() {
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-lg font-semibold">Your activity</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">A day is active when you solve at least one problem.</p></div><p className="text-xs text-slate-400 dark:text-slate-500">Last 12 months</p></div>
       <div className="overflow-x-auto pb-2">
         <div className="min-w-[760px]">
-          <div className="mb-2 ml-8 overflow-hidden">
-            <div className="grid text-[10px] text-slate-400" style={{ gridTemplateColumns: `repeat(${weeks.length}, 14px)`, columnGap: '4px' }}>
-              {monthLabels.map((label, index) => <span key={`${label}-${index}`} className="whitespace-nowrap">{label}</span>)}
-            </div>
-          </div>
-          <div className="flex gap-1">
-            <div className="grid w-7 shrink-0 grid-rows-7 gap-1 text-[10px] text-slate-400"><span>Sun</span><span></span><span>Tue</span><span></span><span>Thu</span><span></span><span>Sat</span></div>
-            <div className="grid grid-flow-col grid-rows-7 gap-1">{weeks.flat().map((day) => <div key={day.date} title={`${day.label}: ${day.count} solved`} aria-label={`${day.label}: ${day.count} solved`} className={`h-3.5 w-3.5 rounded-sm border border-slate-200 dark:border-slate-700 ${day.count === 0 ? 'bg-slate-100 dark:bg-slate-800' : level(day.count) === 1 ? 'bg-violet-200 dark:bg-violet-950' : level(day.count) === 2 ? 'bg-violet-400 dark:bg-violet-800' : level(day.count) === 3 ? 'bg-violet-500 dark:bg-violet-600' : 'bg-violet-700 dark:bg-violet-500'}`} />)}</div>
-          </div>
+          <div className="mb-2 ml-8 grid grid-cols-12 text-[10px] text-slate-400">{Array.from({ length: 12 }, (_, index) => <span key={index}>{index % 2 === 0 ? new Intl.DateTimeFormat(undefined, { month: 'short' }).format(new Date(2026, index, 1)) : ''}</span>)}</div>
+          <div className="flex gap-1"><div className="grid w-7 grid-rows-7 gap-1 text-[10px] text-slate-400"><span>Sun</span><span></span><span>Tue</span><span></span><span>Thu</span><span></span><span>Sat</span></div><div className="grid grid-flow-col grid-rows-7 gap-1">{weeks.flat().map((day) => <div key={day.date} title={`${day.label}: ${day.count} solved`} className={`h-3.5 w-3.5 rounded-sm border border-slate-200 dark:border-slate-700 ${day.count === 0 ? 'bg-slate-100 dark:bg-slate-800' : level(day.count) === 1 ? 'bg-violet-200 dark:bg-violet-950' : level(day.count) === 2 ? 'bg-violet-400 dark:bg-violet-800' : level(day.count) === 3 ? 'bg-violet-500 dark:bg-violet-600' : 'bg-violet-700 dark:bg-violet-500'}`} />)}</div></div>
         </div>
       </div>
       <div className="mt-4 flex items-center justify-end gap-2 text-xs text-slate-400"><span>Less</span>{[0,1,2,3,4].map((item) => <span key={item} className={`h-3.5 w-3.5 rounded-sm border border-slate-200 dark:border-slate-700 ${item === 0 ? 'bg-slate-100 dark:bg-slate-800' : item === 1 ? 'bg-violet-200 dark:bg-violet-950' : item === 2 ? 'bg-violet-400 dark:bg-violet-800' : item === 3 ? 'bg-violet-500 dark:bg-violet-600' : 'bg-violet-700 dark:bg-violet-500'}`} />)}<span>More</span></div>

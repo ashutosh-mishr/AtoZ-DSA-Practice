@@ -1,60 +1,94 @@
-# DSA Practice Tracker database
+# A2Z DSA Practice Tracker database
 
-This folder contains the PostgreSQL schema only. It does not contain the real DSA problem dataset.
+This folder contains the PostgreSQL schema, migration, canonical 474-question dataset, and import instructions.
 
-## Start PostgreSQL locally
+## Canonical dataset
 
-This machine has Homebrew PostgreSQL 14 data at `/opt/homebrew/var/postgresql@14`. Start it manually with:
+`data/a2z_canonical_474.json` is the application import source. It contains:
 
-```bash
-brew services start postgresql@14
+- 18 topics
+- 62 subtopics
+- 474 problems
+- difficulty information
+- LeetCode, GFG, YouTube and TUF/article links where available
+- pattern/complexity/approach metadata where safely available from the source reconciliation
+
+Missing URLs/metadata are stored as `NULL`; the importer does not invent values.
+
+## Local PostgreSQL
+
+This project uses PostgreSQL locally. The current development setup uses PostgreSQL 18 on port `5434`.
+
+The server reads these variables from `server/.env`:
+
+```text
+DB_HOST=localhost
+DB_PORT=5434
+DB_NAME=dsa_practice_tracker
+DB_USER=ashutoshmishra
 ```
 
-Confirm it is ready:
+## Fresh database
+
+Apply the complete schema:
 
 ```bash
-pg_isready
+psql -p 5434 -d dsa_practice_tracker -f database/schema.sql
 ```
 
-To stop it later:
+Then import the canonical dataset from the project root:
 
 ```bash
-brew services stop postgresql@14
+cd server
+npm run import:a2z
 ```
 
-## Create and initialize the database
+The importer validates the expected 18/62/474 structure and runs in a transaction.
 
-From the repository root, create the local database once:
+## Existing database
+
+If the database already has the original tracker schema, run the migration once:
 
 ```bash
-createdb dsa_practice_tracker
+psql -p 5434 -d dsa_practice_tracker -f database/migrate_legacy.sql
 ```
 
-Apply the schema:
+Then run:
 
 ```bash
-psql -d dsa_practice_tracker -f database/schema.sql
+cd server
+npm run import:a2z
 ```
 
-`test-data.sql` inserts only temporary validation records (one topic, one subtopic, and two problems):
-
-```bash
-psql -d dsa_practice_tracker -f database/test-data.sql
-```
-
-Verify the relationships:
-
-```bash
-psql -d dsa_practice_tracker -c "SELECT t.name AS topic, s.name AS subtopic, p.title, pp.status, n.content AS note, b.created_at AS bookmarked_at FROM topics t JOIN subtopics s ON s.topic_id = t.id JOIN problems p ON p.subtopic_id = s.id LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN notes n ON n.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id ORDER BY p.order_number;"
-```
+The importer removes only legacy rows that have no source IDs. On subsequent imports it upserts canonical records by stable source IDs and preserves existing progress, notes, and bookmarks for matching problems.
 
 ## Tables
 
-- `topics` holds top-level roadmap sections.
-- `subtopics` groups problems within a topic.
-- `problems` stores problem metadata and its LeetCode URL.
-- `problem_progress` stores exactly one status per problem: `not_started`, `solved`, or `revision`.
-- `notes` stores one personal note per problem.
-- `bookmarks` stores whether a problem is bookmarked.
+- `dataset_metadata` — imported dataset/version information.
+- `topics` — top-level A2Z sections and source topic IDs.
+- `subtopics` — subtopics and source subtopic IDs.
+- `problems` — problem metadata and external resource links.
+- `topic_prerequisites` — topic-to-topic prerequisite relationships when supplied by a canonical source.
+- `problem_prerequisites` — problem-to-problem prerequisite relationships when supplied by a canonical source.
+- `problem_progress` — one practice status per problem: `not_started`, `solved`, or `revision`.
+- `notes` — one personal note per problem.
+- `bookmarks` — one bookmark row per problem.
 
-Deleting a topic, subtopic, or problem cascades to its dependent records. The schema uses uniqueness constraints to preserve ordering within a parent, avoid duplicate names/URLs, and prevent duplicate progress, note, and bookmark rows per problem. `updated_at` is maintained automatically by PostgreSQL triggers for progress and notes.
+Problem titles are intentionally **not globally unique**, because the same title can legitimately occur in multiple A2Z sections. Stable source problem IDs are unique instead.
+
+## Streaks and daily quotes
+
+The feature migration adds:
+- `practice_activity`: one row per active calendar day.
+- `practice_activity_problems`: unique problem/day records so re-solving the same problem on the same day does not inflate the daily count.
+- `quotes`: the DSA/coding-focused quote pool.
+- `daily_quotes`: one assigned quote per calendar date, preventing immediate day-to-day repeats.
+
+Run once after applying a feature ZIP:
+
+```bash
+cd "/Users/ashutoshmishra/HelloWorld/AtoZ DSA Practice/server"
+npm run migrate:features
+```
+
+A day becomes active when a problem changes from `not_started` to `solved`. Unsolving a problem does not erase historical activity.

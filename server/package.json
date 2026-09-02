@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "import:a2z": "node scripts/importA2Z.js",
+    "migrate:features": "node scripts/migrateFeatures.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

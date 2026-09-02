@@ -29,10 +29,22 @@ async function request(path, options = {}) {
 
 export const api = {
   getTopics: () => request('/topics'),
+  getDatabaseHealth: () => request('/db/health'),
   getProgress: () => request('/progress'),
   getRevision: () => request('/revision'),
   getBookmarks: () => request('/bookmarks'),
-  updateStatus: (id, status) => request(`/problems/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  getStreaks: (date) => request(`/streaks?date=${encodeURIComponent(date)}`),
+  getDailyQuote: (date) => request(`/daily-quote?date=${encodeURIComponent(date)}`),
+  getProblems: (params = {}) => {
+    const search = new URLSearchParams()
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') search.set(key, value)
+    })
+    return request(`/problems${search.toString() ? `?${search.toString()}` : ''}`)
+  },
+  updateStatus: (id, status, activityDate) => request(`/problems/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, ...(activityDate ? { activity_date: activityDate } : {}) }) }),
+  updateProblem: (id, fields) => request(`/problems/${id}`, { method: 'PATCH', body: JSON.stringify(fields) }),
+  updateRevision: (id, revision) => request(`/problems/${id}/revision`, { method: 'PATCH', body: JSON.stringify({ revision }) }),
   createBookmark: (id) => request(`/problems/${id}/bookmark`, { method: 'POST' }),
   removeBookmark: (id) => request(`/problems/${id}/bookmark`, { method: 'DELETE' }),
 }
