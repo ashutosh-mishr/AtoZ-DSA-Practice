@@ -64,9 +64,9 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle }) {
   </>
 
   return <>
-    <button type="button" onClick={() => setMobileOpen(true)} className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 lg:hidden" aria-label="Open navigation menu"><NavigationIcon name="menu" /></button>
+    <button type="button" onClick={() => setMobileOpen(true)} className="fixed left-4 top-4 z-50 grid h-11 w-11 place-items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-lg dark:border-[#2a2a2a] dark:bg-[#1b1b1b] dark:text-slate-200 lg:hidden" aria-label="Open navigation menu"><NavigationIcon name="menu" /></button>
     {mobileOpen ? <button type="button" aria-label="Close navigation overlay" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-[1px] lg:hidden" /> : null}
-    <aside className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white px-4 py-6 shadow-2xl transition-transform duration-200 dark:border-slate-800 dark:bg-slate-900 lg:inset-y-0 lg:right-auto lg:z-20 lg:w-64 lg:translate-x-0 lg:shadow-none ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white px-4 py-6 shadow-2xl transition-transform duration-200 dark:border-[#2a2a2a] dark:bg-[#1b1b1b] lg:inset-y-0 lg:right-auto lg:z-20 lg:w-64 lg:translate-x-0 lg:shadow-none ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="flex h-full flex-col">{navigationContent}</div>
     </aside>
   </>

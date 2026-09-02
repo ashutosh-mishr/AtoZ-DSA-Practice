@@ -19,6 +19,10 @@ function ArticleIcon() {
   return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z" /><path d="M14 3v4h4" /><path d="M9 12h6M9 16h5" /></svg>
 }
 
+function YouTubeIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" /></svg>
+}
+
 function PracticeLink({ href, label, tone = 'default', iconOnly = false, children }) {
   if (!href) return null
   const tones = {
@@ -354,7 +358,7 @@ function App() {
                   <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{problem.topic?.name || '—'}</td>
                   <td className="px-5 py-4 text-slate-500 dark:text-slate-400">{problem.subtopic?.name || '—'}</td>
                   <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${problem.difficulty === 'easy' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : problem.difficulty === 'medium' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{problem.difficulty}</span></td>
-                  <td className="px-5 py-4 text-center">{problem.status === 'solved' ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">Solved</span> : <span className="text-slate-400">—</span>}</td><td className="px-5 py-4"><div className="flex flex-wrap gap-1.5">{problem.leetcode_url && <PracticeLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" />}{problem.gfg_url && <PracticeLink href={problem.gfg_url} label="GFG" tone="gfg" />}{problem.article_url && <PracticeLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></PracticeLink>}{problem.youtube_url && <PracticeLink href={problem.youtube_url} label="YouTube" tone="youtube" />}</div></td>
+                  <td className="px-5 py-4 text-center">{problem.status === 'solved' ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">Solved</span> : <span className="text-slate-400">—</span>}</td><td className="px-5 py-4"><div className="flex flex-wrap gap-1.5">{problem.leetcode_url && <PracticeLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" />}{problem.gfg_url && <PracticeLink href={problem.gfg_url} label="GFG" tone="gfg" />}{problem.article_url && <PracticeLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></PracticeLink>}{problem.youtube_url && <PracticeLink href={problem.youtube_url} label="YouTube" tone="youtube" iconOnly><YouTubeIcon /></PracticeLink>}</div></td>
                 </tr>
               })}
             </tbody>
@@ -423,7 +427,7 @@ function App() {
 
   const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
 }
 
 export default App

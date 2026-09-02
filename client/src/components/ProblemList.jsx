@@ -38,6 +38,10 @@ function ArticleIcon() {
   return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z" /><path d="M14 3v4h4" /><path d="M9 12h6M9 16h5" /></svg>
 }
 
+function YouTubeIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z" /></svg>
+}
+
 function ExternalLink({ href, label, tone = 'default', iconOnly = false, children }) {
   if (!href) return null
   const tones = {
@@ -82,7 +86,7 @@ function EditLinksModal({ problem, onClose, onSave }) {
 }
 
 function SolvedIcon() {
-  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
 }
 
 function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionChange, onProblemUpdate }) {
@@ -114,11 +118,11 @@ function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionCha
               <td className="px-4 py-4 text-slate-400">{index + 1}</td>
               <td className="px-4 py-4"><div className="font-semibold text-slate-900 dark:text-slate-100">{problem.title}</div></td>
               <td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${difficultyStyles[problem.difficulty]}`}>{problem.difficulty}</span></td>
-              <td className="px-4 py-4 text-center"><label className="inline-flex cursor-pointer items-center justify-center" title={problem.status === 'solved' ? 'Mark as not solved' : 'Mark as solved'}><input type="checkbox" checked={problem.status === 'solved'} onChange={(event) => changeStatus(problem, event)} disabled={updatingId === problem.id} className="peer sr-only" aria-label={`${problem.status === 'solved' ? 'Mark as not solved' : 'Mark as solved'}: ${problem.title}`} /><span className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:peer-checked:border-emerald-500 dark:peer-checked:bg-emerald-500">{problem.status === 'solved' ? <SolvedIcon /> : null}</span></label></td>
+              <td className="px-4 py-4 text-center"><label className="inline-flex cursor-pointer items-center justify-center" title={problem.status === 'solved' ? 'Mark as not solved' : 'Mark as solved'}><input type="checkbox" checked={problem.status === 'solved'} onChange={(event) => changeStatus(problem, event)} disabled={updatingId === problem.id} className="peer sr-only" aria-label={`${problem.status === 'solved' ? 'Mark as not solved' : 'Mark as solved'}: ${problem.title}`} /><span className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-300 bg-white text-transparent transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:peer-checked:border-emerald-500 dark:peer-checked:bg-emerald-500">{problem.status === 'solved' ? <SolvedIcon /> : null}</span></label></td>
               <td className="px-4 py-4 text-center"><button type="button" title={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} aria-label={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(problem)} disabled={updatingId === problem.id} className="inline-flex h-8 w-8 cursor-pointer items-center justify-center border-0 bg-transparent disabled:cursor-wait disabled:opacity-50"><BookmarkIcon active={problem.bookmarked} /></button></td>
               <td className="px-4 py-4 text-center"><IconButton label={problem.revision ? 'Remove from revision' : 'Add to revision'} tone="blue" active={problem.revision} onClick={() => toggleRevision(problem)} disabled={updatingId === problem.id}><RevisionIcon active={problem.revision} /></IconButton></td>
               <td className="relative px-4 py-4 text-center"><IconButton label="View pattern and hint" active={openPatternId === problem.id} onClick={() => setOpenPatternId((current) => current === problem.id ? null : problem.id)}><InfoIcon /></IconButton>{openPatternId === problem.id && <PatternPopover problem={problem} onClose={() => setOpenPatternId(null)} />}</td>
-              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></ExternalLink><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" /><button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"><EditIcon /></button></div></td>
+              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></ExternalLink><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" iconOnly><YouTubeIcon /></ExternalLink><button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"><EditIcon /></button></div></td>
             </tr>)}
           </tbody>
         </table>
