@@ -52,12 +52,29 @@ function StreakPage() {
     return result
   }, [calendar])
 
-  const monthLabels = useMemo(() => weeks.map((week, index) => {
-    const first = week[0]
-    const previous = index > 0 ? weeks[index - 1][0] : null
-    const changed = !previous || first.month !== previous.month || first.year !== previous.year
-    return changed ? new Intl.DateTimeFormat(undefined, { month: 'short' }).format(new Date(first.year, first.month, 1)) : ''
-  }), [weeks])
+  const monthSpans = useMemo(() => {
+    const spans = []
+    let i = 0
+    while (i < weeks.length) {
+      const first = weeks[i][0]
+      const month = first.month
+      const year = first.year
+      let endIndex = i
+      while (endIndex + 1 < weeks.length) {
+        const nextFirst = weeks[endIndex + 1][0]
+        const containsMonthDay = weeks[endIndex + 1].some((day) => day.month === month && day.year === year)
+        if (!containsMonthDay) break
+        endIndex += 1
+      }
+      spans.push({
+        label: new Intl.DateTimeFormat(undefined, { month: 'short' }).format(new Date(year, month, 1)),
+        start: i,
+        end: endIndex,
+      })
+      i = endIndex + 1
+    }
+    return spans
+  }, [weeks])
 
   const exactYearStart = new Date(`${localDateKey()}T00:00:00`)
   exactYearStart.setDate(exactYearStart.getDate() - 364)
@@ -101,10 +118,13 @@ function StreakPage() {
 
       <div className="overflow-x-auto pb-1">
         <div className="min-w-[980px]">
-          <div className="mb-2 ml-1 grid text-xs text-slate-400 dark:text-slate-500" style={{ gridTemplateColumns: `repeat(${weeks.length}, 14px)`, columnGap: '4px' }}>
-            {monthLabels.map((label, index) => <span key={`${label}-${index}`} className="whitespace-nowrap">{label}</span>)}
+          <div className="relative mb-2 h-5" aria-hidden="true">
+            {monthSpans.map((span) => {
+              const center = ((span.start + span.end + 1) / 2) / weeks.length * 100
+              return <span key={`${span.label}-${span.start}`} className="absolute -translate-x-1/2 whitespace-nowrap text-xs text-slate-400 dark:text-slate-500" style={{ left: `${center}%` }}>{span.label}</span>
+            })}
           </div>
-          <div className="grid grid-flow-col grid-rows-7 gap-1">
+          <div className="grid grid-flow-col grid-rows-7 auto-cols-[14px] gap-1">
             {weeks.flat().map((day) => {
               const dayLevel = level(day.count)
               return <div key={day.date} title={`${day.label}: ${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`} aria-label={`${day.label}: ${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`} className={`h-3.5 w-3.5 rounded-[3px] border border-slate-200 dark:border-slate-700 ${levelClasses[dayLevel]}`} />

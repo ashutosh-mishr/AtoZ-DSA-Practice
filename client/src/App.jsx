@@ -254,14 +254,21 @@ function App() {
     const revisionCount = Number(progress.revision || 0)
     const bookmarkCount = Number(progress.bookmarks || 0)
 
+    const difficultyCards = ['easy','medium','hard'].map((level) => {
+      const item = progress.difficulty?.[level] || { solved: 0, total: 0 }
+      const pct = item.total ? Math.round((item.solved / item.total) * 100) : 0
+      const tone = level === 'easy' ? 'emerald' : level === 'medium' ? 'amber' : 'rose'
+      return <article key={level} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><p className="text-sm font-semibold capitalize">{level}</p><span className={`rounded-full px-2 py-1 text-xs font-semibold ${tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : tone === 'amber' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{item.solved}/{item.total}</span></div><div className="mt-4 flex items-end justify-between"><span className="text-2xl font-semibold">{item.solved} solved</span><span className="text-sm text-slate-500 dark:text-slate-400">{pct}%</span></div><ProgressBar value={pct} className="mt-3" /></article>
+    })
+
     return <>
       <Breadcrumbs items={[{ label: 'dashboard' }]} />
       <div className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-[2.2rem]">Welcome back</h1>
-          <div className="mt-3 max-w-3xl rounded-xl border border-amber-300/50 bg-amber-50/70 px-4 py-3 text-sm leading-6 text-amber-950 shadow-[0_0_22px_rgba(245,158,11,0.10)] dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100 dark:shadow-[0_0_24px_rgba(245,158,11,0.10)]">
-            <p>{quote ? <>{quote.quote_text}{quote.author ? <span className="ml-2 font-semibold text-amber-700 dark:text-amber-300">— {quote.author}</span> : null}</> : 'Keep solving, learning, and revising one problem at a time.'}</p>
-          </div>
+          <p className="mt-3 max-w-3xl text-base font-medium leading-7 text-amber-700 drop-shadow-[0_0_14px_rgba(245,158,11,0.22)] dark:text-amber-200 dark:drop-shadow-[0_0_16px_rgba(245,158,11,0.20)]">
+            {quote ? <>{quote.quote_text}{quote.author ? <span className="ml-2 font-semibold text-amber-600 dark:text-amber-300">— {quote.author}</span> : null}</> : 'Keep solving, learning, and revising one problem at a time.'}
+          </p>
         </div>
         <div className="flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
           <span className={`h-2 w-2 rounded-full ${databaseStatus === 'connected' ? 'bg-emerald-500' : databaseStatus === 'checking' ? 'bg-amber-400' : 'bg-rose-500'}`} aria-hidden="true" />
@@ -289,10 +296,8 @@ function App() {
             <div><p className="text-2xl font-semibold">{bookmarkCount}</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Bookmarks</p></div>
           </div>
         </article>
-      </section>
 
-      <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Difficulty progress">
-        {['easy','medium','hard'].map((level) => { const item = progress.difficulty?.[level] || { solved: 0, total: 0 }; const pct = item.total ? Math.round((item.solved / item.total) * 100) : 0; const tone = level === 'easy' ? 'emerald' : level === 'medium' ? 'amber' : 'rose'; return <article key={level} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><p className="text-sm font-semibold capitalize">{level}</p><span className={`rounded-full px-2 py-1 text-xs font-semibold ${tone === 'emerald' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300' : tone === 'amber' ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300' : 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'}`}>{item.solved}/{item.total}</span></div><div className="mt-4 flex items-end justify-between"><span className="text-2xl font-semibold">{item.solved} solved</span><span className="text-sm text-slate-500 dark:text-slate-400">{pct}%</span></div><ProgressBar value={pct} className="mt-3" /></article> })}
+        {difficultyCards}
       </section>
 
       <section aria-labelledby="topic-progress-heading"><div className="mb-4 flex items-center justify-between"><div><h2 id="topic-progress-heading" className="text-xl font-semibold">Topic progress</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Open a topic to work through its problems.</p></div><button type="button" onClick={() => handleNavigate('roadmap')} className="cursor-pointer text-sm font-medium text-violet-600 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300">View roadmap</button></div><TopicTable topics={roadmapTopics} onSelectTopic={loadTopicProblems} /></section>
