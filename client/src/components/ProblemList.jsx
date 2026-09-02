@@ -70,7 +70,7 @@ function PatternPopover({ problem, onClose }) {
   )
 }
 
-function EditLinksModal({ problem, onClose, onSave }) {
+export function EditLinksModal({ problem, onClose, onSave }) {
   const [values, setValues] = useState({ leetcode_url: problem.leetcode_url || '', gfg_url: problem.gfg_url || '', article_url: problem.article_url || '', youtube_url: problem.youtube_url || '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -89,7 +89,7 @@ function SolvedIcon() {
   return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
 }
 
-function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionChange, onProblemUpdate }) {
+function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionChange, onProblemUpdate, showEdit = false }) {
   const [updatingId, setUpdatingId] = useState(null)
   const [openPatternId, setOpenPatternId] = useState(null)
   const [editingProblem, setEditingProblem] = useState(null)
@@ -122,7 +122,7 @@ function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionCha
               <td className="px-4 py-4 text-center"><button type="button" title={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} aria-label={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(problem)} disabled={updatingId === problem.id} className="inline-flex h-8 w-8 cursor-pointer items-center justify-center border-0 bg-transparent disabled:cursor-wait disabled:opacity-50"><BookmarkIcon active={problem.bookmarked} /></button></td>
               <td className="px-4 py-4 text-center"><IconButton label={problem.revision ? 'Remove from revision' : 'Add to revision'} tone="blue" active={problem.revision} onClick={() => toggleRevision(problem)} disabled={updatingId === problem.id}><RevisionIcon active={problem.revision} /></IconButton></td>
               <td className="relative px-4 py-4 text-center"><IconButton label="View pattern and hint" active={openPatternId === problem.id} onClick={() => setOpenPatternId((current) => current === problem.id ? null : problem.id)}><InfoIcon /></IconButton>{openPatternId === problem.id && <PatternPopover problem={problem} onClose={() => setOpenPatternId(null)} />}</td>
-              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="Article" tone="article" iconOnly><ArticleIcon /></ExternalLink><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" iconOnly><YouTubeIcon /></ExternalLink><button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#242424] dark:hover:text-slate-200"><EditIcon /></button></div></td>
+              <td className="px-4 py-4"><div className="flex flex-wrap items-center gap-1"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="Article" tone="article" /><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" /><>{showEdit && <button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#242424] dark:hover:text-slate-200"><EditIcon /></button>}</></div></td>
             </tr>)}
           </tbody>
         </table>

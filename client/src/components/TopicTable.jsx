@@ -20,7 +20,7 @@ function TopicTable({ topics, onSelectTopic }) {
                 <tr key={topic.id} className="group hover:bg-slate-50 dark:hover:bg-[#242424]/50">
                   <td className="px-5 py-4 text-slate-400">{index + 1}</td>
                   <td className="px-5 py-4">
-                    <button type="button" onClick={() => onSelectTopic(topic)} className="cursor-pointer text-left font-semibold text-slate-900 hover:text-violet-600 dark:text-slate-100 dark:hover:text-violet-300">
+                    <button type="button" onClick={() => onSelectTopic(topic)} title="Click topic name to view problems" aria-label={`Click to view problems for ${topic.name}`} className="cursor-pointer text-left font-semibold text-slate-900 underline decoration-transparent underline-offset-4 transition-colors hover:text-violet-600 hover:decoration-violet-400 dark:text-slate-100 dark:hover:text-violet-300 dark:hover:decoration-violet-400">
                       {topic.name}
                     </button>
                   </td>
