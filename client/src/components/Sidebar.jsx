@@ -43,12 +43,13 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle, user, onLogout
   }
 
   const navigationContent = <>
-    <div className="flex items-center gap-3 px-3">
+    <div className="flex items-center gap-2 px-3">
       <button type="button" onClick={() => navigate('dashboard')} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl py-1 text-left hover:bg-slate-50 dark:hover:bg-[#242424]" title="Go to Dashboard" aria-label="Go to Dashboard">
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none"><NavigationIcon name="code" /></div>
         <span className="font-semibold tracking-tight">DSA Practice</span>
       </button>
-      <button type="button" onClick={() => setMobileOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#242424] lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
+      <button type="button" onClick={onThemeToggle} className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white" aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`} title={`Switch to ${isDark ? 'light' : 'dark'} mode`}><NavigationIcon name={isDark ? 'sun' : 'moon'} /></button>
+      <button type="button" onClick={() => setMobileOpen(false)} className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-[#242424] lg:hidden" aria-label="Close navigation menu"><NavigationIcon name="close" /></button>
     </div>
 
     <nav className="mt-8 space-y-1" aria-label="Primary navigation">
@@ -63,14 +64,11 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle, user, onLogout
     </nav>
 
     <div className="mt-auto pt-8">
-      {user ? <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-[#303030] dark:bg-[#171717]">
+      {user ? <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-[#303030] dark:bg-[#171717]">
         <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{user.name || user.email}</p>
         <div className="mt-1 flex items-center justify-between gap-3"><span className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</span><span className="shrink-0 rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-300">{user.role}</span></div>
         <button type="button" onClick={onLogout} className="mt-3 w-full cursor-pointer rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white dark:border-[#3a3a3a] dark:text-slate-300 dark:hover:bg-[#242424]">Log out</button>
       </div> : null}
-      <button type="button" onClick={onThemeToggle} className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white" aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}>
-        <NavigationIcon name={isDark ? 'sun' : 'moon'} /><span>{isDark ? 'Light mode' : 'Dark mode'}</span>
-      </button>
     </div>
   </>
 

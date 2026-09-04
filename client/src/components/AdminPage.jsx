@@ -52,6 +52,21 @@ export default function AdminPage({ currentUser }) {
     solved: users.reduce((sum, item) => sum + item.solved_count, 0),
   }), [users])
 
+  async function changeRole(item, role) {
+    if (item.id === currentUser.id || item.is_primary_admin) return
+    const action = role === 'admin' ? 'promote' : 'demote'
+    if (!window.confirm(`Are you sure you want to ${action} ${item.name || item.email}?`)) return
+    setBusyId(item.id)
+    try {
+      const updated = await api.updateAdminUserRole(item.id, role)
+      setUsers((current) => current.map((user) => user.id === item.id ? { ...user, ...updated } : user))
+    } catch (actionError) {
+      window.alert(actionError.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   async function toggleUser(item) {
     if (item.id === currentUser.id) return
     const action = item.active ? 'disable' : 'enable'
@@ -114,7 +129,7 @@ export default function AdminPage({ currentUser }) {
                 const busy = busyId === item.id
                 return <tr key={item.id} className="align-middle hover:bg-slate-50/70 dark:hover:bg-[#1d1d1d]">
                   <td className="px-4 py-4"><p className="font-semibold">{item.name || 'Unnamed user'} {isSelf ? <span className="ml-1 text-xs font-medium text-violet-600 dark:text-violet-300">(you)</span> : null}</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.email}</p><p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">Joined {formatDate(item.created_at)}</p></td>
-                  <td className="px-4 py-4"><span className="rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">{item.role}</span></td>
+                  <td className="px-4 py-4">{item.is_primary_admin ? <span className="rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Admin · Primary</span> : isSelf ? <span className="rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">{item.role}</span> : <select value={item.role} disabled={busy} onChange={(event) => changeRole(item, event.target.value)} className="cursor-pointer rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-violet-700 outline-none focus:border-violet-500 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-violet-300" aria-label={`Change role for ${item.email}`}><option value="user">User</option><option value="admin">Admin</option></select>}</td>
                   <td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${item.active ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-slate-500/10 text-slate-600 dark:text-slate-300'}`}>{item.active ? 'Active' : 'Disabled'}</span></td>
                   <td className="px-4 py-4 font-semibold">{item.solved_count}</td>
                   <td className="px-4 py-4">{item.revision_count}</td>
@@ -122,7 +137,7 @@ export default function AdminPage({ currentUser }) {
                   <td className="px-4 py-4">{item.note_count}</td>
                   <td className="px-4 py-4">{item.active_days}</td>
                   <td className="px-4 py-4 text-slate-500 dark:text-slate-400">{formatDate(item.last_active_date)}</td>
-                  <td className="px-4 py-4"><div className="flex items-center gap-2">{isSelf ? <span className="text-xs text-slate-400 dark:text-slate-500">Current account</span> : <><button type="button" disabled={busy} onClick={() => toggleUser(item)} className={`cursor-pointer rounded-lg border px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${item.active ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/50 dark:text-amber-300 dark:hover:bg-amber-950/30' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700/50 dark:text-emerald-300 dark:hover:bg-emerald-950/30'}`}>{item.active ? 'Disable' : 'Enable'}</button><button type="button" disabled={busy} onClick={() => deleteUser(item)} className="cursor-pointer rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-700/50 dark:text-rose-300 dark:hover:bg-rose-950/30">Delete</button></>}</div></td>
+                  <td className="px-4 py-4"><div className="flex items-center gap-2">{isSelf ? <span className="text-xs text-slate-400 dark:text-slate-500">Current account</span> : item.is_primary_admin ? <span className="text-xs font-medium text-violet-600 dark:text-violet-300">Protected primary admin</span> : <><button type="button" disabled={busy} onClick={() => toggleUser(item)} className={`cursor-pointer rounded-lg border px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${item.active ? 'border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700/50 dark:text-amber-300 dark:hover:bg-amber-950/30' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700/50 dark:text-emerald-300 dark:hover:bg-emerald-950/30'}`}>{item.active ? 'Disable' : 'Enable'}</button><button type="button" disabled={busy} onClick={() => deleteUser(item)} className="cursor-pointer rounded-lg border border-rose-300 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-700/50 dark:text-rose-300 dark:hover:bg-rose-950/30">Delete</button></>}</div></td>
                 </tr>
               })}
             </tbody>

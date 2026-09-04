@@ -88,14 +88,14 @@ async function createSession(userId) {
 }
 
 function publicUser(row) {
-  return { id: Number(row.id), email: row.email, name: row.name, role: row.role }
+  return { id: Number(row.id), email: row.email, name: row.name, role: row.role, welcome_message: row.welcome_message || 'Welcome back', is_primary_admin: Boolean(row.is_primary_admin) }
 }
 
 const requireAuth = asyncHandler(async (request, response, next) => {
   const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
   if (!token) return sendError(response, 401, 'unauthorized', 'Please log in to continue.')
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.role, u.active
+    `SELECT u.id, u.email, u.name, u.role, u.active, u.welcome_message, u.is_primary_admin
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
     [hashSessionToken(token)],
@@ -205,7 +205,7 @@ app.get('/api/auth/me', asyncHandler(async (request, response) => {
   const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
   if (!token) return response.json({ user: null })
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.role, u.active FROM sessions s JOIN users u ON u.id = s.user_id
+    `SELECT u.id, u.email, u.name, u.role, u.active, u.welcome_message, u.is_primary_admin FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
     [hashSessionToken(token)],
   )
@@ -233,9 +233,23 @@ app.get('/api/db/health', async (_request, response) => {
 
 app.use('/api', requireAuth)
 
+app.get('/api/profile', asyncHandler(async (request, response) => {
+  const result = await pool.query('SELECT id, email, name, role, welcome_message, is_primary_admin FROM users WHERE id = $1', [request.user.id])
+  if (!result.rowCount) return sendError(response, 404, 'not_found', 'User profile not found.')
+  response.json(publicUser(result.rows[0]))
+}))
+
+app.patch('/api/profile', asyncHandler(async (request, response) => {
+  const welcomeMessage = typeof request.body?.welcome_message === 'string' ? request.body.welcome_message.trim() : null
+  if (welcomeMessage === null) return sendError(response, 400, 'invalid_input', 'welcome_message must be a string.')
+  if (welcomeMessage.length > 255) return sendError(response, 400, 'invalid_input', 'Welcome message must be 255 characters or fewer.')
+  const result = await pool.query('UPDATE users SET welcome_message = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, name, role, welcome_message, is_primary_admin', [welcomeMessage || 'Welcome back', request.user.id])
+  response.json(publicUser(result.rows[0]))
+}))
+
 app.get('/api/admin/users', requireAdmin, asyncHandler(async (_request, response) => {
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.role, u.active, u.created_at,
+    `SELECT u.id, u.email, u.name, u.role, u.active, u.is_primary_admin, u.created_at,
             COUNT(DISTINCT pp.problem_id) FILTER (WHERE pp.status = 'solved')::INTEGER AS solved_count,
             COUNT(DISTINCT pp.problem_id) FILTER (WHERE pp.revision = TRUE)::INTEGER AS revision_count,
             COUNT(DISTINCT b.problem_id)::INTEGER AS bookmark_count,
@@ -256,6 +270,7 @@ app.get('/api/admin/users', requireAdmin, asyncHandler(async (_request, response
     name: row.name,
     role: row.role,
     active: Boolean(row.active),
+    is_primary_admin: Boolean(row.is_primary_admin),
     created_at: row.created_at,
     solved_count: Number(row.solved_count),
     revision_count: Number(row.revision_count),
@@ -266,14 +281,33 @@ app.get('/api/admin/users', requireAdmin, asyncHandler(async (_request, response
   })))
 }))
 
+app.patch('/api/admin/users/:id/role', requireAdmin, asyncHandler(async (request, response) => {
+  const userId = parsePositiveId(request.params.id)
+  if (!userId) return sendError(response, 400, 'invalid_input', 'User ID must be a positive integer.')
+  const { role } = request.body || {}
+  if (!['user', 'admin'].includes(role)) return sendError(response, 400, 'invalid_input', 'role must be user or admin.')
+  const target = await pool.query('SELECT id, email, name, role, active, is_primary_admin FROM users WHERE id = $1', [userId])
+  if (!target.rowCount) return sendError(response, 404, 'not_found', 'User not found.')
+  if (target.rows[0].is_primary_admin && role !== 'admin') return sendError(response, 400, 'protected_admin', 'The primary administrator cannot be demoted.')
+  if (userId === request.user.id && role !== 'admin') return sendError(response, 400, 'invalid_input', 'You cannot demote your own account.')
+  if (target.rows[0].role === role) return response.json({ id: userId, email: target.rows[0].email, name: target.rows[0].name, role, active: Boolean(target.rows[0].active), is_primary_admin: Boolean(target.rows[0].is_primary_admin) })
+  if (target.rows[0].role === 'admin' && role === 'user') {
+    const adminCount = await pool.query("SELECT COUNT(*)::INTEGER AS count FROM users WHERE role = 'admin' AND active = TRUE AND id <> $1", [userId])
+    if (Number(adminCount.rows[0].count) < 1) return sendError(response, 400, 'last_admin', 'At least one active administrator must remain.')
+  }
+  const result = await pool.query('UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, name, role, active, is_primary_admin', [role, userId])
+  response.json({ id: Number(result.rows[0].id), email: result.rows[0].email, name: result.rows[0].name, role: result.rows[0].role, active: Boolean(result.rows[0].active), is_primary_admin: Boolean(result.rows[0].is_primary_admin) })
+}))
+
 app.patch('/api/admin/users/:id/status', requireAdmin, asyncHandler(async (request, response) => {
   const userId = parsePositiveId(request.params.id)
   if (!userId) return sendError(response, 400, 'invalid_input', 'User ID must be a positive integer.')
   if (userId === request.user.id) return sendError(response, 400, 'invalid_input', 'You cannot disable your own account.')
   const { active } = request.body || {}
   if (typeof active !== 'boolean') return sendError(response, 400, 'invalid_input', 'active must be a boolean.')
-  const target = await pool.query('SELECT id, email, name, role, active FROM users WHERE id = $1', [userId])
+  const target = await pool.query('SELECT id, email, name, role, active, is_primary_admin FROM users WHERE id = $1', [userId])
   if (!target.rowCount) return sendError(response, 404, 'not_found', 'User not found.')
+  if (!active && target.rows[0].is_primary_admin) return sendError(response, 400, 'protected_admin', 'The primary administrator cannot be disabled.')
   if (!active && target.rows[0].role === 'admin') {
     const adminCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM users WHERE role = \'admin\' AND active = TRUE AND id <> $1', [userId])
     if (Number(adminCount.rows[0].count) < 1) return sendError(response, 400, 'last_admin', 'At least one active administrator must remain.')
@@ -289,6 +323,7 @@ app.delete('/api/admin/users/:id', requireAdmin, asyncHandler(async (request, re
   if (userId === request.user.id) return sendError(response, 400, 'invalid_input', 'You cannot delete your own account.')
   const target = await pool.query('SELECT id, role FROM users WHERE id = $1', [userId])
   if (!target.rowCount) return sendError(response, 404, 'not_found', 'User not found.')
+  if (target.rows[0].is_primary_admin) return sendError(response, 400, 'protected_admin', 'The primary administrator cannot be deleted.')
   if (target.rows[0].role === 'admin') {
     const adminCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM users WHERE role = \'admin\' AND id <> $1', [userId])
     if (Number(adminCount.rows[0].count) < 1) return sendError(response, 400, 'last_admin', 'You cannot delete the only administrator.')
@@ -501,7 +536,7 @@ app.get('/api/progress', asyncHandler(async (request, response) => {
   })
 }))
 
-app.patch('/api/problems/:id', asyncHandler(async (request, response) => {
+app.patch('/api/problems/:id', requireAdmin, asyncHandler(async (request, response) => {
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   if (!(await requireProblem(problemId, response))) return
