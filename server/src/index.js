@@ -240,11 +240,33 @@ app.get('/api/profile', asyncHandler(async (request, response) => {
 }))
 
 app.patch('/api/profile', asyncHandler(async (request, response) => {
+  const name = typeof request.body?.name === 'string' ? request.body.name.trim() : null
   const welcomeMessage = typeof request.body?.welcome_message === 'string' ? request.body.welcome_message.trim() : null
-  if (welcomeMessage === null) return sendError(response, 400, 'invalid_input', 'welcome_message must be a string.')
-  if (welcomeMessage.length > 255) return sendError(response, 400, 'invalid_input', 'Welcome message must be 255 characters or fewer.')
-  const result = await pool.query('UPDATE users SET welcome_message = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, name, role, welcome_message, is_primary_admin', [welcomeMessage || 'Welcome back', request.user.id])
+  if (name === null && welcomeMessage === null) return sendError(response, 400, 'invalid_input', 'Provide a name or welcome_message to update.')
+  if (name !== null && !name) return sendError(response, 400, 'invalid_input', 'Name is required.')
+  if (name !== null && name.length > 100) return sendError(response, 400, 'invalid_input', 'Name must be 100 characters or fewer.')
+  if (welcomeMessage !== null && welcomeMessage.length > 255) return sendError(response, 400, 'invalid_input', 'Welcome message must be 255 characters or fewer.')
+  const result = await pool.query(
+    `UPDATE users SET name = COALESCE($1, name), welcome_message = COALESCE($2, welcome_message), updated_at = CURRENT_TIMESTAMP
+     WHERE id = $3 RETURNING id, email, name, role, welcome_message, is_primary_admin`,
+    [name, welcomeMessage === null ? null : (welcomeMessage || 'Welcome back'), request.user.id],
+  )
   response.json(publicUser(result.rows[0]))
+}))
+
+app.patch('/api/profile/password', asyncHandler(async (request, response) => {
+  const currentPassword = request.body?.current_password
+  const newPassword = request.body?.new_password
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') return sendError(response, 400, 'invalid_input', 'Current and new passwords are required.')
+  if (newPassword.length < 8) return sendError(response, 400, 'invalid_input', 'New password must be at least 8 characters.')
+  if (currentPassword === newPassword) return sendError(response, 400, 'invalid_input', 'New password must be different from the current password.')
+  const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [request.user.id])
+  if (!result.rowCount || !(await verifyPassword(currentPassword, result.rows[0].password_hash))) return sendError(response, 401, 'invalid_credentials', 'Current password is incorrect.')
+  const passwordHash = await hashPassword(newPassword)
+  const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
+  await pool.query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [passwordHash, request.user.id])
+  if (token) await pool.query('DELETE FROM sessions WHERE user_id = $1 AND token_hash <> $2', [request.user.id, hashSessionToken(token)])
+  response.json({ success: true })
 }))
 
 app.get('/api/admin/users', requireAdmin, asyncHandler(async (_request, response) => {

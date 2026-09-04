@@ -32,12 +32,17 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  function updateUser(updatedUser) {
+    setUser(updatedUser)
+    return updatedUser
+  }
+
   async function logout() {
     await api.logout()
     setUser(null)
   }
 
-  const value = useMemo(() => ({ user, loading, login, register, logout, refreshUser }), [user, loading])
+  const value = useMemo(() => ({ user, loading, login, register, logout, refreshUser, updateUser }), [user, loading])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

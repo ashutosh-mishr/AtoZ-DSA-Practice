@@ -45,6 +45,7 @@ export const api = {
   updateAdminUserRole: (id, role) => request(`/admin/users/${id}/role`, { method: 'PATCH', body: JSON.stringify({ role }) }),
   getProfile: () => request('/profile'),
   updateProfile: (fields) => request('/profile', { method: 'PATCH', body: JSON.stringify(fields) }),
+  changePassword: (currentPassword, newPassword) => request('/profile/password', { method: 'PATCH', body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }) }),
   getTopics: () => request('/topics'),
   getDatabaseHealth: () => request('/db/health'),
   getProgress: () => request('/progress'),

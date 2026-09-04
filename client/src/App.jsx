@@ -10,6 +10,7 @@ import PracticePage from './components/PracticePage'
 import StreakPage from './components/StreakPage'
 import SolutionPage from './components/SolutionPage'
 import AdminPage from './components/AdminPage'
+import AccountModal from './components/AccountModal'
 
 function LoadingState() {
   return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">Loading your practice data…</div>
@@ -73,11 +74,12 @@ function Breadcrumbs({ items }) {
 }
 
 function TrackerApp() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
   const [dashboardGreeting, setDashboardGreeting] = useState(user?.welcome_message || 'Welcome back')
   const [view, setView] = useState(() => getRoute().view)
   const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [roadmapSearch, setRoadmapSearch] = useState('')
   const [roadmapProblems, setRoadmapProblems] = useState([])
   const [topicStatusFilter, setTopicStatusFilter] = useState('all')
@@ -454,7 +456,7 @@ function TrackerApp() {
 
   const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'admin' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Admin' }]} /><AdminPage currentUser={user} /></> : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={handleStatusChange} onRevisionChange={handleRevisionChange} onBookmarkChange={handleBookmarkChange} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div>{accountOpen ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={async () => { setAccountOpen(false); await logout() }} /> : null}</div>
 
 }
 
