@@ -35,6 +35,7 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  startGoogleLogin: (mode = 'login') => { window.location.assign(`${apiBaseUrl}/auth/google${mode === 'link' ? '?mode=link' : ''}`) },
   getCurrentUser: () => request('/auth/me'),
   login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   register: (name, email, password) => request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) }),

@@ -80,6 +80,7 @@ function TrackerApp() {
   const [view, setView] = useState(() => getRoute().view)
   const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [googleNotice, setGoogleNotice] = useState('')
   const [roadmapSearch, setRoadmapSearch] = useState('')
   const [roadmapProblems, setRoadmapProblems] = useState([])
   const [topicStatusFilter, setTopicStatusFilter] = useState('all')
@@ -110,6 +111,19 @@ function TrackerApp() {
     document.documentElement.classList.toggle('dark', isDark)
     localStorage.setItem('theme', isDark ? 'dark' : 'light')
   }, [isDark])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const google = params.get('google')
+    if (google === 'linked') {
+      setGoogleNotice('Google account connected successfully.')
+      window.history.replaceState({}, '', '/dashboard')
+      const timer = window.setTimeout(() => setGoogleNotice(''), 4500)
+      return () => window.clearTimeout(timer)
+    }
+    if (google === 'success') window.history.replaceState({}, '', '/dashboard')
+    return undefined
+  }, [])
 
   async function loadCoreData(showLoading = true) {
     if (showLoading) setIsCoreLoading(true)
@@ -456,7 +470,7 @@ function TrackerApp() {
 
   const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'admin' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Admin' }]} /><AdminPage currentUser={user} /></> : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={handleStatusChange} onRevisionChange={handleRevisionChange} onBookmarkChange={handleBookmarkChange} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div>{accountOpen ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={async () => { setAccountOpen(false); await logout() }} /> : null}</div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100">{googleNotice ? <div className="fixed right-4 top-4 z-[120] rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-700 shadow-xl dark:border-emerald-900/50 dark:bg-[#171717] dark:text-emerald-300">{googleNotice}</div> : null}<Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div>{accountOpen ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={async () => { setAccountOpen(false); await logout() }} /> : null}</div>
 
 }
 

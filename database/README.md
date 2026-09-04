@@ -119,3 +119,17 @@ The migration assigns the existing progress, notes, bookmarks, and activity hist
 
 ## Admin account management
 Run `npm run migrate:admin` once after the authentication migration to add the user active/disabled flag used by the admin panel.
+
+
+## Google OAuth
+
+Google Sign-In uses Google's OAuth 2.0 authorization-code flow. The server keeps the Google client secret private and uses a short-lived state record to protect the callback. An existing email/password account is linked to a verified Google account when the verified Google email matches the account email. Authenticated users can also explicitly connect Google from Account Settings.
+
+Set these server environment variables locally (do not commit them):
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI` (local default: `http://localhost:3000/api/auth/google/callback`)
+- `CLIENT_URL` (local default: `http://localhost:5173`)
+
+In Google Cloud, create a Web application OAuth client and add the exact callback URI above to its authorized redirect URIs. Keep the client secret outside the repository.

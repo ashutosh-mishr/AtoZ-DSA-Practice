@@ -15,6 +15,7 @@ export default function AccountModal({ user, onClose, onUserUpdated, onLogout })
   const [savingPassword, setSavingPassword] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [connectingGoogle, setConnectingGoogle] = useState(false)
 
   useEffect(() => {
     const onKeyDown = (event) => { if (event.key === 'Escape') onClose() }
@@ -65,12 +66,18 @@ export default function AccountModal({ user, onClose, onUserUpdated, onLogout })
         </section>
 
         <section className="border-t border-slate-200 pt-6 dark:border-[#303030]">
-          <h3 className="font-semibold">Change Password</h3><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Use your current password to set a new one.</p>
+          <h3 className="font-semibold">Google Account</h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Use Google to sign in to this same DSA Practice account.</p>
+          <button type="button" onClick={() => { setConnectingGoogle(true); api.startGoogleLogin('link') }} disabled={user?.google_linked || connectingGoogle} className="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-200 dark:hover:bg-[#242424]"><span className="font-bold">G</span>{user?.google_linked ? 'Google connected' : connectingGoogle ? 'Connecting…' : 'Connect Google'}</button>
+        </section>
+
+        <section className="border-t border-slate-200 pt-6 dark:border-[#303030]">
+          <h3 className="font-semibold">{user?.password_set ? 'Change Password' : 'Set Password'}</h3><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{user?.password_set ? 'Use your current password to set a new one.' : 'Add a password so you can also sign in with email and password.'}</p>
           <form onSubmit={changePassword} className="mt-4 space-y-4">
-            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Current password</span><input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" required className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100" /></label>
+            {user?.password_set ? <label className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Current password</span><input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" required className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100" /></label> : null}
             <label className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">New password</span><input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={8} required className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100" /></label>
             <label className="block"><span className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">Confirm new password</span><input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={8} required className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100" /></label>
-            <button type="submit" disabled={savingPassword} className="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-200 dark:hover:bg-[#242424]">{savingPassword ? 'Changing…' : 'Change Password'}</button>
+            <button type="submit" disabled={savingPassword} className="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-200 dark:hover:bg-[#242424]">{savingPassword ? (user?.password_set ? 'Changing…' : 'Setting…') : (user?.password_set ? 'Change Password' : 'Set Password')}</button>
           </form>
         </section>
 
