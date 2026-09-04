@@ -71,6 +71,7 @@ function Breadcrumbs({ items }) {
 
 function App() {
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
+  const [dashboardGreeting, setDashboardGreeting] = useState(() => localStorage.getItem('dashboardGreeting') || 'Welcome back')
   const [view, setView] = useState(() => getRoute().view)
   const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
   const [roadmapSearch, setRoadmapSearch] = useState('')
@@ -296,7 +297,7 @@ function App() {
       <Breadcrumbs items={[{ label: 'dashboard' }]} />
       <div className="mb-9 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-[2.2rem]">Welcome back</h1>
+          <input type="text" value={dashboardGreeting} onChange={(event) => setDashboardGreeting(event.target.value)} onBlur={() => localStorage.setItem('dashboardGreeting', dashboardGreeting || 'Welcome back')} onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur() }} aria-label="Dashboard greeting" className="w-full max-w-3xl bg-transparent p-0 text-3xl font-semibold leading-tight tracking-tight text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500 sm:text-[2.2rem]" placeholder="Welcome back" />
           <p className="mt-3 max-w-3xl text-base font-medium leading-7 text-amber-700 drop-shadow-[0_0_14px_rgba(245,158,11,0.22)] dark:text-amber-200 dark:drop-shadow-[0_0_16px_rgba(245,158,11,0.20)]">
             {quote ? <>{quote.quote_text}{quote.author ? <span className="ml-2 font-semibold text-amber-600 dark:text-amber-300">— {quote.author}</span> : null}</> : 'Keep solving, learning, and revising one problem at a time.'}
           </p>
