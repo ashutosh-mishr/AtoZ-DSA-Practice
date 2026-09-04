@@ -246,7 +246,7 @@ app.get('/api/topics/:id', asyncHandler(async (request, response) => {
 app.get('/api/problems', asyncHandler(async (request, response) => {
   const { topic_id: topicIdValue, subtopic_id: subtopicIdValue, difficulty, status } = request.query
   const conditions = []
-  const values = []
+  const values = [request.user.id]
 
   if (topicIdValue !== undefined) {
     const topicId = parsePositiveId(topicIdValue)
@@ -286,8 +286,8 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
-     LEFT JOIN problem_progress pp ON pp.problem_id = p.id
-     LEFT JOIN bookmarks b ON b.problem_id = p.id ${whereClause}
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
+     LEFT JOIN bookmarks b ON b.problem_id = p.id AND b.user_id = $1 ${whereClause}
      ORDER BY t.order_number, s.order_number, p.order_number`,
     values,
   )
@@ -295,6 +295,7 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
 }))
 
 app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => {
+  const userId = request.user.id
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
 
@@ -318,11 +319,11 @@ app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => 
      FROM problems p
      JOIN subtopics s ON s.id = p.subtopic_id
      JOIN topics t ON t.id = s.topic_id
-     LEFT JOIN problem_progress pp ON pp.problem_id = p.id
-     LEFT JOIN bookmarks b ON b.problem_id = p.id
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
+     LEFT JOIN bookmarks b ON b.problem_id = p.id AND b.user_id = $1
      LEFT JOIN problem_solutions ps ON ps.problem_id = p.id
-     WHERE p.id = $1`,
-    [problemId],
+     WHERE p.id = $2`,
+    [userId, problemId],
   )
 
   if (result.rowCount === 0) {
@@ -355,6 +356,7 @@ app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => 
 }))
 
 app.get('/api/problems/:id', asyncHandler(async (request, response) => {
+  const userId = request.user.id
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   const result = await pool.query(
@@ -371,23 +373,28 @@ app.get('/api/problems/:id', asyncHandler(async (request, response) => {
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
-     LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN notes n ON n.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id
-     WHERE p.id = $1`,
-    [problemId],
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
+     LEFT JOIN notes n ON n.problem_id = p.id AND n.user_id = $1
+     LEFT JOIN bookmarks b ON b.problem_id = p.id AND b.user_id = $1
+     WHERE p.id = $2`,
+    [userId, problemId],
   )
   if (result.rowCount === 0) return sendError(response, 404, 'not_found', 'Problem not found.')
   const problem = mapProblem(result.rows[0])
   response.json({ ...problem, note: result.rows[0].note, bookmarked: result.rows[0].bookmarked })
 }))
 
-app.get('/api/progress', asyncHandler(async (_request, response) => {
+app.get('/api/progress', asyncHandler(async (request, response) => {
+  const userId = request.user.id
   const totalsResult = await pool.query(
     `SELECT COUNT(*) AS total,
             COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'solved') AS solved,
             COUNT(*) FILTER (WHERE COALESCE(pp.revision, FALSE)) AS revision,
             COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'not_started') AS not_started,
             COUNT(b.problem_id) AS bookmarks
-     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id LEFT JOIN bookmarks b ON b.problem_id = p.id`,
+     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
+     LEFT JOIN bookmarks b ON b.problem_id = p.id AND b.user_id = $1`,
+    [userId],
   )
   const topicResult = await pool.query(
     `SELECT t.id, t.name, COUNT(p.id) AS total,
@@ -395,14 +402,16 @@ app.get('/api/progress', asyncHandler(async (_request, response) => {
             COUNT(p.id) FILTER (WHERE COALESCE(pp.revision, FALSE)) AS revision,
             COUNT(p.id) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'not_started') AS not_started
      FROM topics t LEFT JOIN subtopics s ON s.topic_id = t.id LEFT JOIN problems p ON p.subtopic_id = s.id
-     LEFT JOIN problem_progress pp ON pp.problem_id = p.id
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
      GROUP BY t.id, t.name, t.order_number ORDER BY t.order_number`,
+    [userId],
   )
   const difficultyResult = await pool.query(
     `SELECT LOWER(p.difficulty) AS difficulty, COUNT(*) AS total,
             COUNT(*) FILTER (WHERE COALESCE(pp.status, 'not_started') = 'solved') AS solved
-     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id
+     FROM problems p LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
      GROUP BY LOWER(p.difficulty)`,
+    [userId],
   )
   const totals = totalsResult.rows[0]
   const total = Number(totals.total)
@@ -482,31 +491,31 @@ app.patch('/api/problems/:id/status', asyncHandler(async (request, response) => 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    const previous = await client.query("SELECT status FROM problem_progress WHERE problem_id = $1", [problemId])
+    const previous = await client.query("SELECT status FROM problem_progress WHERE problem_id = $1 AND user_id = $2", [problemId, request.user.id])
     const previousStatus = previous.rowCount ? previous.rows[0].status : 'not_started'
     const result = await client.query(
-      `INSERT INTO problem_progress (problem_id, status) VALUES ($1, $2)
-       ON CONFLICT (problem_id) DO UPDATE SET status = EXCLUDED.status
+      `INSERT INTO problem_progress (problem_id, user_id, status) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, problem_id) DO UPDATE SET status = EXCLUDED.status
        RETURNING problem_id, status, revision, updated_at`,
-      [problemId, status],
+      [problemId, request.user.id, status],
     )
 
     if (previousStatus !== 'solved' && status === 'solved') {
       const activityDate = requestedActivityDate || new Date().toISOString().slice(0, 10)
       await client.query(
-        `INSERT INTO practice_activity (activity_date, problems_solved) VALUES ($1, 0)
-         ON CONFLICT (activity_date) DO NOTHING`,
-        [activityDate],
+        `INSERT INTO practice_activity (user_id, activity_date, problems_solved) VALUES ($1, $2, 0)
+         ON CONFLICT (user_id, activity_date) DO NOTHING`,
+        [request.user.id, activityDate],
       )
       const activityProblem = await client.query(
-        `INSERT INTO practice_activity_problems (activity_date, problem_id)
-         VALUES ($1, $2) ON CONFLICT (activity_date, problem_id) DO NOTHING RETURNING problem_id`,
-        [activityDate, problemId],
+        `INSERT INTO practice_activity_problems (user_id, activity_date, problem_id)
+         VALUES ($1, $2, $3) ON CONFLICT (user_id, activity_date, problem_id) DO NOTHING RETURNING problem_id`,
+        [request.user.id, activityDate, problemId],
       )
       if (activityProblem.rowCount === 1) {
         await client.query(
-          `UPDATE practice_activity SET problems_solved = problems_solved + 1, updated_at = CURRENT_TIMESTAMP WHERE activity_date = $1`,
-          [activityDate],
+          `UPDATE practice_activity SET problems_solved = problems_solved + 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND activity_date = $2`,
+          [request.user.id, activityDate],
         )
       }
     }
@@ -521,7 +530,8 @@ app.patch('/api/problems/:id/status', asyncHandler(async (request, response) => 
   }
 }))
 
-app.get('/api/revision', asyncHandler(async (_request, response) => {
+app.get('/api/revision', asyncHandler(async (request, response) => {
+  const userId = request.user.id
   const result = await pool.query(
     `SELECT p.id, p.source_problem_id, p.title, p.difficulty, p.pattern, p.leetcode_url, p.gfg_url, p.youtube_url, p.article_url,
             p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
@@ -536,9 +546,10 @@ app.get('/api/revision', asyncHandler(async (_request, response) => {
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM problems p JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
-     JOIN problem_progress pp ON pp.problem_id = p.id AND pp.revision = TRUE
-     LEFT JOIN bookmarks b ON b.problem_id = p.id
+     JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1 AND pp.revision = TRUE
+     LEFT JOIN bookmarks b ON b.problem_id = p.id AND b.user_id = $1
      ORDER BY t.order_number, s.order_number, p.order_number`,
+    [userId],
   )
   response.json(result.rows.map(mapProblem))
 }))
@@ -550,15 +561,16 @@ app.patch('/api/problems/:id/revision', asyncHandler(async (request, response) =
   const { revision } = request.body
   if (typeof revision !== 'boolean') return sendError(response, 400, 'invalid_input', 'revision must be a boolean.')
   const result = await pool.query(
-    `INSERT INTO problem_progress (problem_id, status, revision) VALUES ($1, 'not_started', $2)
-     ON CONFLICT (problem_id) DO UPDATE SET revision = EXCLUDED.revision
+    `INSERT INTO problem_progress (problem_id, user_id, status, revision) VALUES ($1, $2, 'not_started', $3)
+     ON CONFLICT (user_id, problem_id) DO UPDATE SET revision = EXCLUDED.revision
      RETURNING problem_id, status, revision, updated_at`,
-    [problemId, revision],
+    [problemId, request.user.id, revision],
   )
   response.json(result.rows[0])
 }))
 
-app.get('/api/bookmarks', asyncHandler(async (_request, response) => {
+app.get('/api/bookmarks', asyncHandler(async (request, response) => {
+  const userId = request.user.id
   const result = await pool.query(
     `SELECT p.id, p.source_problem_id, p.title, p.difficulty, p.pattern, p.leetcode_url, p.gfg_url, p.youtube_url, p.article_url,
             p.time_complexity, p.space_complexity, p.brute_force, p.optimal_approach, p.order_number,
@@ -574,7 +586,9 @@ app.get('/api/bookmarks', asyncHandler(async (_request, response) => {
                       OR NULLIF(BTRIM(ps.optimal_approach), '') IS NOT NULL
                       OR NULLIF(BTRIM(ps.code), '') IS NOT NULL)) AS has_solution
      FROM bookmarks b JOIN problems p ON p.id = b.problem_id JOIN subtopics s ON s.id = p.subtopic_id JOIN topics t ON t.id = s.topic_id
-     LEFT JOIN problem_progress pp ON pp.problem_id = p.id ORDER BY b.created_at DESC`,
+     LEFT JOIN problem_progress pp ON pp.problem_id = p.id AND pp.user_id = $1
+     WHERE b.user_id = $1 ORDER BY b.created_at DESC`,
+    [userId],
   )
   response.json(result.rows.map((row) => ({ ...mapProblem(row), bookmarked_at: row.bookmarked_at })))
 }))
@@ -583,7 +597,7 @@ app.post('/api/problems/:id/bookmark', asyncHandler(async (request, response) =>
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   if (!(await requireProblem(problemId, response))) return
-  const result = await pool.query('INSERT INTO bookmarks (problem_id) VALUES ($1) ON CONFLICT (problem_id) DO NOTHING RETURNING problem_id, created_at', [problemId])
+  const result = await pool.query('INSERT INTO bookmarks (user_id, problem_id) VALUES ($1, $2) ON CONFLICT (user_id, problem_id) DO NOTHING RETURNING problem_id, created_at', [request.user.id, problemId])
   response.status(result.rowCount === 1 ? 201 : 200).json({ problem_id: problemId, bookmarked: true, created: result.rowCount === 1, created_at: result.rowCount === 1 ? result.rows[0].created_at : null })
 }))
 
@@ -591,7 +605,7 @@ app.delete('/api/problems/:id/bookmark', asyncHandler(async (request, response) 
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   if (!(await requireProblem(problemId, response))) return
-  const result = await pool.query('DELETE FROM bookmarks WHERE problem_id = $1 RETURNING problem_id', [problemId])
+  const result = await pool.query('DELETE FROM bookmarks WHERE user_id = $1 AND problem_id = $2 RETURNING problem_id', [request.user.id, problemId])
   response.json({ problem_id: problemId, bookmarked: false, removed: result.rowCount === 1 })
 }))
 
@@ -602,7 +616,7 @@ app.get('/api/streaks', asyncHandler(async (request, response) => {
     return sendError(response, 400, 'invalid_input', 'date must use YYYY-MM-DD format.')
   }
   const today = requestedDate || new Date().toISOString().slice(0, 10)
-  const result = await pool.query(`SELECT activity_date, problems_solved FROM practice_activity ORDER BY activity_date`)
+  const result = await pool.query(`SELECT activity_date, problems_solved FROM practice_activity WHERE user_id = $1 ORDER BY activity_date`, [request.user.id])
   const activity = result.rows.map((row) => ({ date: row.activity_date.toISOString().slice(0, 10), problems_solved: Number(row.problems_solved) }))
   const activeDates = new Set(activity.map((item) => item.date))
   const totalProblemsSolved = activity.reduce((sum, item) => sum + item.problems_solved, 0)
@@ -683,7 +697,7 @@ app.get('/api/problems/:id/note', asyncHandler(async (request, response) => {
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   if (!(await requireProblem(problemId, response))) return
-  const result = await pool.query('SELECT problem_id, content, updated_at FROM notes WHERE problem_id = $1', [problemId])
+  const result = await pool.query('SELECT problem_id, content, updated_at FROM notes WHERE user_id = $1 AND problem_id = $2', [request.user.id, problemId])
   response.json(result.rowCount === 0 ? { problem_id: problemId, content: null, updated_at: null } : result.rows[0])
 }))
 
@@ -694,10 +708,10 @@ app.put('/api/problems/:id/note', asyncHandler(async (request, response) => {
   if (typeof content !== 'string') return sendError(response, 400, 'invalid_input', 'content must be a string.')
   if (!(await requireProblem(problemId, response))) return
   const result = await pool.query(
-    `INSERT INTO notes (problem_id, content) VALUES ($1, $2)
-     ON CONFLICT (problem_id) DO UPDATE SET content = EXCLUDED.content
+    `INSERT INTO notes (user_id, problem_id, content) VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, problem_id) DO UPDATE SET content = EXCLUDED.content
      RETURNING problem_id, content, updated_at`,
-    [problemId, content],
+    [request.user.id, problemId, content],
   )
   response.json(result.rows[0])
 }))

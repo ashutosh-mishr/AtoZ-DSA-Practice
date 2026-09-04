@@ -108,4 +108,11 @@ New registrations are regular `user` accounts. To create or promote an administr
 npm run create:admin -- admin@example.com "Admin Name"
 ```
 
-The current authentication release protects the application APIs with login/session checks and establishes the `user`/`admin` role foundation. User-specific progress/notes/bookmarks/activity ownership will be migrated in a later step so existing tracker data is not accidentally lost during this rollout.
+The current authentication release protects the application APIs with login/session checks and establishes the `user`/`admin` role foundation. To migrate the existing tracker data to the first admin account and enable per-user ownership, run once:
+
+```bash
+cd server
+npm run migrate:users
+```
+
+The migration assigns the existing progress, notes, bookmarks, and activity history to the oldest admin account, then isolates those records by `user_id`. New users start with their own empty tracker history.

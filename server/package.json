@@ -10,7 +10,8 @@
     "migrate:features": "node scripts/migrateFeatures.js",
     "migrate:solutions": "node scripts/importSolutions.js",
     "migrate:auth": "node scripts/migrateAuth.js",
-    "create:admin": "node scripts/createAdmin.js"
+    "create:admin": "node scripts/createAdmin.js",
+    "migrate:users": "node scripts/migrateUserData.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

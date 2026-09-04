@@ -75,26 +75,50 @@ CREATE TABLE problem_prerequisites (
   CONSTRAINT problem_prerequisites_no_self_reference CHECK (problem_id <> prerequisite_problem_id)
 );
 
+CREATE TABLE users (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email VARCHAR(320) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  name VARCHAR(255) NOT NULL DEFAULT '',
+  role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash VARCHAR(64) NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE problem_progress (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  problem_id BIGINT NOT NULL UNIQUE REFERENCES problems(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
   status VARCHAR(20) NOT NULL DEFAULT 'not_started'
     CHECK (status IN ('not_started', 'solved')),
   revision BOOLEAN NOT NULL DEFAULT FALSE,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT problem_progress_user_problem_key UNIQUE (user_id, problem_id)
 );
 
 CREATE TABLE notes (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  problem_id BIGINT NOT NULL UNIQUE REFERENCES problems(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
   content TEXT NOT NULL DEFAULT '',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT notes_user_problem_key UNIQUE (user_id, problem_id)
 );
 
 CREATE TABLE bookmarks (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  problem_id BIGINT NOT NULL UNIQUE REFERENCES problems(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT bookmarks_user_problem_key UNIQUE (user_id, problem_id)
 );
 
 CREATE OR REPLACE FUNCTION set_updated_at()
@@ -133,20 +157,27 @@ CREATE INDEX idx_subtopics_topic_id ON subtopics (topic_id);
 CREATE INDEX idx_problems_subtopic_id ON problems (subtopic_id);
 CREATE INDEX idx_problems_difficulty ON problems (difficulty);
 CREATE INDEX idx_problem_progress_status ON problem_progress (status);
+CREATE INDEX idx_problem_progress_user_id ON problem_progress (user_id);
+CREATE INDEX idx_notes_user_id ON notes (user_id);
+CREATE INDEX idx_bookmarks_user_id ON bookmarks (user_id);
 CREATE INDEX idx_topic_prerequisites_prerequisite ON topic_prerequisites (prerequisite_topic_id);
 CREATE INDEX idx_problem_prerequisites_prerequisite ON problem_prerequisites (prerequisite_problem_id);
 
 CREATE TABLE practice_activity (
-  activity_date DATE PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_date DATE NOT NULL,
   problems_solved INTEGER NOT NULL DEFAULT 0 CHECK (problems_solved >= 0),
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, activity_date)
 );
 
 CREATE TABLE practice_activity_problems (
-  activity_date DATE NOT NULL REFERENCES practice_activity(activity_date) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL,
+  activity_date DATE NOT NULL,
   problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
-  PRIMARY KEY (activity_date, problem_id)
+  PRIMARY KEY (user_id, activity_date, problem_id),
+  CONSTRAINT practice_activity_problems_activity_fk FOREIGN KEY (user_id, activity_date) REFERENCES practice_activity(user_id, activity_date) ON DELETE CASCADE
 );
 
 CREATE TABLE quotes (
@@ -166,6 +197,8 @@ CREATE TABLE daily_quotes (
 
 CREATE INDEX idx_practice_activity_problems_problem ON practice_activity_problems(problem_id);
 CREATE INDEX idx_daily_quotes_quote_id ON daily_quotes(quote_id);
+CREATE INDEX idx_practice_activity_user_id ON practice_activity (user_id);
+CREATE INDEX idx_practice_activity_problems_user_id ON practice_activity_problems (user_id);
 
 
 CREATE TABLE problem_solutions (
@@ -187,22 +220,3 @@ CREATE TABLE problem_solutions (
 );
 
 CREATE INDEX idx_problem_solutions_problem ON problem_solutions (problem_id);
-
--- Authentication tables and user ownership columns.
-CREATE TABLE IF NOT EXISTS users (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  email VARCHAR(320) NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  name VARCHAR(255) NOT NULL DEFAULT '',
-  role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS sessions (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash VARCHAR(64) NOT NULL UNIQUE,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
