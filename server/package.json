@@ -8,7 +8,9 @@
     "start": "node src/index.js",
     "import:a2z": "node scripts/importA2Z.js",
     "migrate:features": "node scripts/migrateFeatures.js",
-    "migrate:solutions": "node scripts/importSolutions.js"
+    "migrate:solutions": "node scripts/importSolutions.js",
+    "migrate:auth": "node scripts/migrateAuth.js",
+    "create:admin": "node scripts/createAdmin.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

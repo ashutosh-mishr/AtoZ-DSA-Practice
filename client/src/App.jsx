@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from './AuthContext'
+import AuthPage from './components/AuthPage'
 import { api } from './api'
 import ProblemList, { EditLinksModal } from './components/ProblemList'
 import ProgressBar from './components/ProgressBar'
@@ -56,7 +58,7 @@ function getRoute() {
   const view = path.slice(1)
   const solutionMatch = path.match(/^\/solution\/(\d+)$/)
   if (solutionMatch) return { view: 'solution', problemId: Number(solutionMatch[1]) }
-  return { view: ['roadmap', 'revision', 'bookmarks', 'practice', 'streaks'].includes(view) ? view : 'dashboard' }
+  return { view: ['roadmap', 'revision', 'bookmarks', 'practice', 'streaks', 'login', 'register'].includes(view) ? view : 'dashboard' }
 }
 
 function Breadcrumbs({ items }) {
@@ -69,7 +71,8 @@ function Breadcrumbs({ items }) {
   })}</nav>
 }
 
-function App() {
+function TrackerApp() {
+  const { user, logout } = useAuth()
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
   const [dashboardGreeting, setDashboardGreeting] = useState(() => localStorage.getItem('dashboardGreeting') || 'Welcome back')
   const [view, setView] = useState(() => getRoute().view)
@@ -156,7 +159,7 @@ function App() {
     }
   }
 
-  useEffect(() => { loadCoreData() }, [])
+  useEffect(() => { loadCoreData() }, [user])
 
   useEffect(() => {
     const handlePopState = () => {
@@ -440,7 +443,29 @@ function App() {
 
   const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={handleStatusChange} onRevisionChange={handleRevisionChange} onBookmarkChange={handleBookmarkChange} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100"><Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div></div>
+}
+
+function App() {
+  const { user, loading } = useAuth()
+  const [authView, setAuthView] = useState(() => {
+    const path = window.location.pathname.replace(/\/$/, '')
+    return path === '/register' ? 'register' : 'login'
+  })
+
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname.replace(/\/$/, '')
+      setAuthView(path === '/register' ? 'register' : 'login')
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  if (loading) return <div className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500 dark:bg-[#101010] dark:text-slate-400">Checking your account…</div>
+  if (!user) return <AuthPage mode={authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
+  if (window.location.pathname === '/login' || window.location.pathname === '/register') window.history.replaceState({}, '', '/dashboard')
+  return <TrackerApp />
 }
 
 export default App

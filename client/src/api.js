@@ -18,8 +18,15 @@ async function request(path, options = {}) {
   if (!apiBaseUrl) throw new ApiError(0, 'The API address is not configured.')
 
   try {
-    const response = await fetch(`${apiBaseUrl}${path}`, { headers: { 'Content-Type': 'application/json', ...options.headers }, ...options })
-    if (!response.ok) throw new ApiError(response.status, userMessageForStatus(response.status))
+    const response = await fetch(`${apiBaseUrl}${path}`, { credentials: 'include', headers: { 'Content-Type': 'application/json', ...options.headers }, ...options })
+    if (!response.ok) {
+      let message = userMessageForStatus(response.status)
+      try {
+        const payload = await response.json()
+        if (payload?.message) message = payload.message
+      } catch {}
+      throw new ApiError(response.status, message)
+    }
     return response.status === 204 ? null : response.json()
   } catch (error) {
     if (error instanceof ApiError) throw error
@@ -28,6 +35,10 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getCurrentUser: () => request('/auth/me'),
+  login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (name, email, password) => request('/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) }),
+  logout: () => request('/auth/logout', { method: 'POST' }),
   getTopics: () => request('/topics'),
   getDatabaseHealth: () => request('/db/health'),
   getProgress: () => request('/progress'),

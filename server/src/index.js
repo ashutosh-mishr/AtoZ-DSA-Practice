@@ -1,4 +1,6 @@
 import express from 'express'
+import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto'
+import { promisify } from 'node:util'
 import pool, { getDatabaseTime } from './db.js'
 
 const app = express()
@@ -6,6 +8,9 @@ const port = process.env.PORT || 3000
 const allowedOrigins = new Set(['http://localhost:5173', 'http://127.0.0.1:5173'])
 const validStatuses = new Set(['not_started', 'solved'])
 const validDifficulties = new Set(['easy', 'medium', 'hard'])
+const scrypt = promisify(scryptCallback)
+const sessionCookieName = 'dsa_session'
+const sessionDurationMs = 7 * 24 * 60 * 60 * 1000
 
 app.use((request, response, next) => {
   const origin = request.headers.origin
@@ -15,6 +20,7 @@ app.use((request, response, next) => {
     response.setHeader('Vary', 'Origin')
     response.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+    response.setHeader('Access-Control-Allow-Credentials', 'true')
   }
 
   if (request.method === 'OPTIONS') {
@@ -33,6 +39,78 @@ const asyncHandler = (handler) => (request, response, next) => {
 
 function sendError(response, status, error, message) {
   response.status(status).json({ error, message })
+}
+
+function normalizeEmail(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : ''
+}
+
+function parseCookies(header = '') {
+  return Object.fromEntries(header.split(';').map((part) => part.trim()).filter(Boolean).map((part) => {
+    const index = part.indexOf('=')
+    return index === -1 ? [part, ''] : [decodeURIComponent(part.slice(0, index)), decodeURIComponent(part.slice(index + 1))]
+  }))
+}
+
+function hashSessionToken(token) {
+  return createHash('sha256').update(token).digest('hex')
+}
+
+async function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex')
+  const derivedKey = await scrypt(password, salt, 64)
+  return `${salt}:${derivedKey.toString('hex')}`
+}
+
+async function verifyPassword(password, storedHash) {
+  const [salt, keyHex] = String(storedHash || '').split(':')
+  if (!salt || !keyHex) return false
+  const expected = Buffer.from(keyHex, 'hex')
+  const actual = await scrypt(password, salt, expected.length)
+  return expected.length === actual.length && timingSafeEqual(expected, actual)
+}
+
+function setSessionCookie(response, token) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  response.setHeader('Set-Cookie', `${sessionCookieName}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${Math.floor(sessionDurationMs / 1000)}; SameSite=Lax${secure}`)
+}
+
+function clearSessionCookie(response) {
+  response.setHeader('Set-Cookie', `${sessionCookieName}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`)
+}
+
+async function createSession(userId) {
+  const token = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + sessionDurationMs)
+  await pool.query('DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP')
+  await pool.query('INSERT INTO sessions (user_id, token_hash, expires_at) VALUES ($1, $2, $3)', [userId, hashSessionToken(token), expiresAt])
+  return token
+}
+
+function publicUser(row) {
+  return { id: Number(row.id), email: row.email, name: row.name, role: row.role }
+}
+
+const requireAuth = asyncHandler(async (request, response, next) => {
+  const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
+  if (!token) return sendError(response, 401, 'unauthorized', 'Please log in to continue.')
+  const result = await pool.query(
+    `SELECT u.id, u.email, u.name, u.role
+     FROM sessions s JOIN users u ON u.id = s.user_id
+     WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
+    [hashSessionToken(token)],
+  )
+  if (!result.rowCount) {
+    clearSessionCookie(response)
+    return sendError(response, 401, 'unauthorized', 'Your session has expired. Please log in again.')
+  }
+  request.user = publicUser(result.rows[0])
+  next()
+})
+
+const requireAdmin = (request, response, next) => {
+  if (request.user?.role !== 'admin') return sendError(response, 403, 'forbidden', 'Administrator access is required.')
+  next()
 }
 
 function parsePositiveId(value) {
@@ -89,6 +167,53 @@ const healthCheck = (_request, response) => {
 app.get('/health', healthCheck)
 app.get('/api/health', healthCheck)
 
+
+app.post('/api/auth/register', asyncHandler(async (request, response) => {
+  const name = typeof request.body?.name === 'string' ? request.body.name.trim() : ''
+  const email = normalizeEmail(request.body?.email)
+  const password = request.body?.password
+  if (!name) return sendError(response, 400, 'invalid_input', 'Name is required.')
+  if (!/^\S+@\S+\.\S+$/.test(email)) return sendError(response, 400, 'invalid_input', 'Please enter a valid email address.')
+  if (typeof password !== 'string' || password.length < 8) return sendError(response, 400, 'invalid_input', 'Password must be at least 8 characters.')
+  const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email])
+  if (existing.rowCount) return sendError(response, 409, 'email_exists', 'An account with this email already exists.')
+  const passwordHash = await hashPassword(password)
+  const result = await pool.query("INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, 'user') RETURNING id, email, name, role", [email, passwordHash, name])
+  const token = await createSession(result.rows[0].id)
+  setSessionCookie(response, token)
+  response.status(201).json({ user: publicUser(result.rows[0]) })
+}))
+
+app.post('/api/auth/login', asyncHandler(async (request, response) => {
+  const email = normalizeEmail(request.body?.email)
+  const password = request.body?.password
+  if (!/^\S+@\S+\.\S+$/.test(email) || typeof password !== 'string') return sendError(response, 400, 'invalid_input', 'Email and password are required.')
+  const result = await pool.query('SELECT id, email, name, role, password_hash FROM users WHERE email = $1', [email])
+  if (!result.rowCount || !(await verifyPassword(password, result.rows[0].password_hash))) return sendError(response, 401, 'invalid_credentials', 'Invalid email or password.')
+  const token = await createSession(result.rows[0].id)
+  setSessionCookie(response, token)
+  response.json({ user: publicUser(result.rows[0]) })
+}))
+
+app.get('/api/auth/me', asyncHandler(async (request, response) => {
+  const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
+  if (!token) return response.json({ user: null })
+  const result = await pool.query(
+    `SELECT u.id, u.email, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
+     WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
+    [hashSessionToken(token)],
+  )
+  if (!result.rowCount) { clearSessionCookie(response); return response.json({ user: null }) }
+  response.json({ user: publicUser(result.rows[0]) })
+}))
+
+app.post('/api/auth/logout', asyncHandler(async (request, response) => {
+  const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
+  if (token) await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashSessionToken(token)])
+  clearSessionCookie(response)
+  response.status(204).end()
+}))
+
 app.get('/api/db/health', async (_request, response) => {
   try {
     const databaseTime = await getDatabaseTime()
@@ -98,6 +223,8 @@ app.get('/api/db/health', async (_request, response) => {
     response.status(503).json({ status: 'error', service: 'dsa-practice-tracker-api', database: 'unavailable' })
   }
 })
+
+app.use('/api', requireAuth)
 
 app.get('/api/topics', asyncHandler(async (_request, response) => {
   const result = await pool.query('SELECT id, source_topic_id, name, description, order_number FROM topics ORDER BY order_number')

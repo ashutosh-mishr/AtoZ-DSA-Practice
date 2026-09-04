@@ -92,3 +92,20 @@ npm run migrate:features
 ```
 
 A day becomes active when a problem changes from `not_started` to `solved`. Unsolving a problem does not erase historical activity.
+
+## Authentication
+
+Email/password authentication uses PostgreSQL-backed sessions and an HttpOnly cookie. Run the authentication migration once:
+
+```bash
+cd server
+npm run migrate:auth
+```
+
+New registrations are regular `user` accounts. To create or promote an administrator account:
+
+```bash
+npm run create:admin -- admin@example.com "Admin Name"
+```
+
+The current authentication release protects the application APIs with login/session checks and establishes the `user`/`admin` role foundation. User-specific progress/notes/bookmarks/activity ownership will be migrated in a later step so existing tracker data is not accidentally lost during this rollout.
