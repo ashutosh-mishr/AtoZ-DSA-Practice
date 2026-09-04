@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from './AuthContext'
 import AuthPage from './components/AuthPage'
+import AuthRecoveryPage from './components/AuthRecoveryPage'
 import { api } from './api'
 import ProblemList, { EditLinksModal } from './components/ProblemList'
 import ProgressBar from './components/ProgressBar'
@@ -60,7 +61,7 @@ function getRoute() {
   const view = path.slice(1)
   const solutionMatch = path.match(/^\/solution\/(\d+)$/)
   if (solutionMatch) return { view: 'solution', problemId: Number(solutionMatch[1]) }
-  return { view: ['roadmap', 'revision', 'bookmarks', 'practice', 'streaks', 'admin', 'login', 'register'].includes(view) ? view : 'dashboard' }
+  return { view: ['roadmap', 'revision', 'bookmarks', 'practice', 'streaks', 'admin', 'login', 'register', 'forgot-password', 'reset-password'].includes(view) ? view : 'dashboard' }
 }
 
 function Breadcrumbs({ items }) {
@@ -478,20 +479,32 @@ function App() {
   const { user, loading } = useAuth()
   const [authView, setAuthView] = useState(() => {
     const path = window.location.pathname.replace(/\/$/, '')
-    return path === '/register' ? 'register' : 'login'
+    if (path === '/register') return 'register'
+    if (path === '/forgot-password') return 'forgot-password'
+    if (path === '/reset-password') return 'reset-password'
+    return 'login'
   })
 
   useEffect(() => {
     const onPopState = () => {
       const path = window.location.pathname.replace(/\/$/, '')
-      setAuthView(path === '/register' ? 'register' : 'login')
+      if (path === '/register') setAuthView('register')
+      else if (path === '/forgot-password') setAuthView('forgot-password')
+      else if (path === '/reset-password') setAuthView('reset-password')
+      else setAuthView('login')
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
   }, [])
 
   if (loading) return <div className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500 dark:bg-[#101010] dark:text-slate-400">Checking your account…</div>
-  if (!user) return <AuthPage mode={authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
+
+  const publicAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(window.location.pathname.replace(/\/$/, ''))
+  if (!user && publicAuthRoute) {
+    if (authView === 'forgot-password' || authView === 'reset-password') return <AuthRecoveryPage mode={authView === 'reset-password' ? 'reset' : 'forgot'} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
+    return <AuthPage mode={authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
+  }
+  if (!user) return <AuthPage mode={authView === 'forgot-password' || authView === 'reset-password' ? 'login' : authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
   if (window.location.pathname === '/login' || window.location.pathname === '/register') window.history.replaceState({}, '', '/dashboard')
   return <TrackerApp />
 }

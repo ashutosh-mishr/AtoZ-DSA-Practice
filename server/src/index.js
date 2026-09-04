@@ -17,6 +17,130 @@ const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\
 const googleClientId = process.env.GOOGLE_CLIENT_ID || ''
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `http://localhost:${port}/api/auth/google/callback`
+const resendApiKey = process.env.RESEND_API_KEY || ''
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+const passwordResetUrl = (process.env.PASSWORD_RESET_URL || `${clientUrl}/reset-password`).replace(/\/$/, '')
+const passwordResetTtlMs = Math.max(5, Number(process.env.PASSWORD_RESET_TTL_MINUTES || 30)) * 60 * 1000
+const passwordResetRateLimitMs = 15 * 60 * 1000
+const passwordResetRateLimitMax = 3
+const passwordResetAttempts = new Map()
+
+function googleConfigured() {
+  return Boolean(googleClientId && googleClientSecret && googleRedirectUri)
+}
+
+function resendConfigured() {
+  return Boolean(resendApiKey && resendFromEmail)
+}
+
+function passwordResetRateLimitKey(request, email) {
+  const forwarded = typeof request.headers['x-forwarded-for'] === 'string' ? request.headers['x-forwarded-for'].split(',')[0].trim() : ''
+  const ip = forwarded || request.socket.remoteAddress || 'unknown'
+  return `${ip}:${email}`
+}
+
+function passwordResetRateLimited(request, email) {
+  const now = Date.now()
+  for (const [key, timestamps] of passwordResetAttempts) {
+    const recent = timestamps.filter((timestamp) => now - timestamp < passwordResetRateLimitMs)
+    if (recent.length) passwordResetAttempts.set(key, recent)
+    else passwordResetAttempts.delete(key)
+  }
+  const key = passwordResetRateLimitKey(request, email)
+  const recent = passwordResetAttempts.get(key) || []
+  if (recent.length >= passwordResetRateLimitMax) return true
+  recent.push(now)
+  passwordResetAttempts.set(key, recent)
+  return false
+}
+
+function hashResetToken(token) {
+  return createHash('sha256').update(token).digest('hex')
+}
+
+async function sendPasswordResetEmail(email, token) {
+  if (!resendConfigured()) throw new Error('Resend is not configured.')
+  const resetLink = `${passwordResetUrl}?token=${encodeURIComponent(token)}`
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: resendFromEmail,
+      to: [email],
+      subject: 'Reset your DSA Practice password',
+      html: `<!doctype html><html><body style="margin:0;background:#f8f7ff;font-family:Arial,sans-serif;color:#171717"><div style="max-width:560px;margin:40px auto;padding:36px 28px;background:#fff;border:1px solid #e5e7eb;border-radius:20px"><div style="font-size:24px;font-weight:700;color:#6d28d9">DSA Practice</div><h1 style="font-size:28px;margin:28px 0 12px">Reset your password</h1><p style="font-size:16px;line-height:1.6;color:#52525b">We received a request to reset your DSA Practice password. This link will expire in ${Math.round(passwordResetTtlMs / 60000)} minutes.</p><p style="margin:28px 0"><a href="${resetLink}" style="display:inline-block;padding:14px 22px;background:#6d28d9;color:#fff;text-decoration:none;border-radius:10px;font-weight:700">Reset password</a></p><p style="font-size:13px;line-height:1.6;color:#71717a">If you did not request this, you can safely ignore this email. Your password will not change.</p><p style="font-size:13px;color:#a1a1aa;margin-top:28px">DSA Practice Tracker</p></div></body></html>`,
+    }),
+  })
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`Resend email failed: ${response.status} ${details}`)
+  }
+}
+
+function googleAuthorizationUrl(state) {
+  const params = new URLSearchParams({
+    client_id: googleClientId,
+    redirect_uri: googleRedirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    state,
+    access_type: 'offline',
+    prompt: 'select_account',
+  })
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+}
+
+function setOauthStateCookie(response, state) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  response.setHeader('Set-Cookie', `${oauthStateCookieName}=${encodeURIComponent(state)}; HttpOnly; Path=/; Max-Age=${Math.floor(oauthStateDurationMs / 1000)}; SameSite=Lax${secure}`)
+}
+
+function clearOauthStateCookie(response) {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  response.setHeader('Set-Cookie', `${oauthStateCookieName}=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${secure}`)
+}
+
+function oauthRedirect(response, { error }) {
+  response.redirect(`${clientUrl}/login?google_error=${encodeURIComponent(error)}`)
+}
+
+async function exchangeGoogleCode(code) {
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: googleClientId,
+      client_secret: googleClientSecret,
+      redirect_uri: googleRedirectUri,
+      grant_type: 'authorization_code',
+    }),
+  })
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`Google token exchange failed: ${response.status} ${details}`)
+  }
+  const payload = await response.json()
+  if (!payload.access_token) throw new Error('Google token response did not include an access token.')
+  return payload.access_token
+}
+
+async function fetchGoogleProfile(accessToken) {
+  const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`Google userinfo request failed: ${response.status} ${details}`)
+  }
+  const profile = await response.json()
+  if (!profile.sub || !profile.email || profile.email_verified !== true) throw new Error('Google account email could not be verified.')
+  return { googleId: profile.sub, email: normalizeEmail(profile.email), name: typeof profile.name === 'string' ? profile.name.trim() : '' }
+}
+
 
 app.use((request, response, next) => {
   const origin = request.headers.origin
@@ -246,6 +370,63 @@ app.get('/api/auth/google/callback', asyncHandler(async (request, response) => {
     console.error('Google OAuth error:', error)
     oauthRedirect(response, { error: 'Google sign-in could not be completed. Please try again.' })
   }
+}))
+
+app.post('/api/auth/forgot-password', asyncHandler(async (request, response) => {
+  const email = normalizeEmail(request.body?.email)
+  const genericMessage = 'If an account with that email exists, you will receive a password reset link shortly.'
+  if (!/^\S+@\S+\.\S+$/.test(email)) return response.status(200).json({ message: genericMessage })
+  if (passwordResetRateLimited(request, email)) return response.status(200).json({ message: genericMessage })
+
+  const result = await pool.query('SELECT id, email, active FROM users WHERE email = $1', [email])
+  if (!result.rowCount || !result.rows[0].active || !resendConfigured()) return response.status(200).json({ message: genericMessage })
+
+  const token = randomBytes(32).toString('hex')
+  const tokenHash = hashResetToken(token)
+  const expiresAt = new Date(Date.now() + passwordResetTtlMs)
+  await pool.query('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = $1 AND used_at IS NULL', [result.rows[0].id])
+  await pool.query('INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)', [result.rows[0].id, tokenHash, expiresAt])
+
+  try {
+    await sendPasswordResetEmail(result.rows[0].email, token)
+  } catch (error) {
+    console.error('Password reset email error:', error)
+    await pool.query('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE token_hash = $1', [tokenHash])
+  }
+
+  response.status(200).json({ message: genericMessage })
+}))
+
+app.post('/api/auth/reset-password', asyncHandler(async (request, response) => {
+  const token = typeof request.body?.token === 'string' ? request.body.token.trim() : ''
+  const newPassword = request.body?.new_password
+  if (!token || typeof newPassword !== 'string') return sendError(response, 400, 'invalid_input', 'Reset token and new password are required.')
+  if (newPassword.length < 8) return sendError(response, 400, 'invalid_input', 'New password must be at least 8 characters.')
+
+  const tokenHash = hashResetToken(token)
+  const result = await pool.query(
+    `SELECT id, user_id FROM password_reset_tokens
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP`,
+    [tokenHash],
+  )
+  if (!result.rowCount) return sendError(response, 400, 'invalid_reset_token', 'This password reset link is invalid or has expired. Please request a new one.')
+
+  const passwordHash = await hashPassword(newPassword)
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND active = TRUE', [passwordHash, result.rows[0].user_id])
+    await client.query('UPDATE password_reset_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1 AND used_at IS NULL', [result.rows[0].id])
+    await client.query('DELETE FROM sessions WHERE user_id = $1', [result.rows[0].user_id])
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+
+  response.status(200).json({ success: true, message: 'Your password has been reset. Please sign in with your new password.' })
 }))
 
 app.post('/api/auth/register', asyncHandler(async (request, response) => {

@@ -13,7 +13,8 @@
     "create:admin": "node scripts/createAdmin.js",
     "migrate:users": "node scripts/migrateUserData.js",
     "migrate:admin": "node scripts/migrateAdmin.js",
-    "migrate:google": "node scripts/migrateGoogleOAuth.js"
+    "migrate:google": "node scripts/migrateGoogleOAuth.js",
+    "migrate:password-reset": "node scripts/migratePasswordReset.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
