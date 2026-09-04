@@ -116,3 +116,6 @@ npm run migrate:users
 ```
 
 The migration assigns the existing progress, notes, bookmarks, and activity history to the oldest admin account, then isolates those records by `user_id`. New users start with their own empty tracker history.
+
+## Admin account management
+Run `npm run migrate:admin` once after the authentication migration to add the user active/disabled flag used by the admin panel.

@@ -11,7 +11,8 @@
     "migrate:solutions": "node scripts/importSolutions.js",
     "migrate:auth": "node scripts/migrateAuth.js",
     "create:admin": "node scripts/createAdmin.js",
-    "migrate:users": "node scripts/migrateUserData.js"
+    "migrate:users": "node scripts/migrateUserData.js",
+    "migrate:admin": "node scripts/migrateAdmin.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",

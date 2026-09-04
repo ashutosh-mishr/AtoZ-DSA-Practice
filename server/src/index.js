@@ -95,7 +95,7 @@ const requireAuth = asyncHandler(async (request, response, next) => {
   const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
   if (!token) return sendError(response, 401, 'unauthorized', 'Please log in to continue.')
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.role
+    `SELECT u.id, u.email, u.name, u.role, u.active
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
     [hashSessionToken(token)],
@@ -103,6 +103,11 @@ const requireAuth = asyncHandler(async (request, response, next) => {
   if (!result.rowCount) {
     clearSessionCookie(response)
     return sendError(response, 401, 'unauthorized', 'Your session has expired. Please log in again.')
+  }
+  if (!result.rows[0].active) {
+    await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashSessionToken(token)])
+    clearSessionCookie(response)
+    return sendError(response, 403, 'account_disabled', 'Your account has been disabled. Please contact an administrator.')
   }
   request.user = publicUser(result.rows[0])
   next()
@@ -188,8 +193,9 @@ app.post('/api/auth/login', asyncHandler(async (request, response) => {
   const email = normalizeEmail(request.body?.email)
   const password = request.body?.password
   if (!/^\S+@\S+\.\S+$/.test(email) || typeof password !== 'string') return sendError(response, 400, 'invalid_input', 'Email and password are required.')
-  const result = await pool.query('SELECT id, email, name, role, password_hash FROM users WHERE email = $1', [email])
+  const result = await pool.query('SELECT id, email, name, role, password_hash, active FROM users WHERE email = $1', [email])
   if (!result.rowCount || !(await verifyPassword(password, result.rows[0].password_hash))) return sendError(response, 401, 'invalid_credentials', 'Invalid email or password.')
+  if (!result.rows[0].active) return sendError(response, 403, 'account_disabled', 'Your account has been disabled. Please contact an administrator.')
   const token = await createSession(result.rows[0].id)
   setSessionCookie(response, token)
   response.json({ user: publicUser(result.rows[0]) })
@@ -199,11 +205,12 @@ app.get('/api/auth/me', asyncHandler(async (request, response) => {
   const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
   if (!token) return response.json({ user: null })
   const result = await pool.query(
-    `SELECT u.id, u.email, u.name, u.role FROM sessions s JOIN users u ON u.id = s.user_id
+    `SELECT u.id, u.email, u.name, u.role, u.active FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1 AND s.expires_at > CURRENT_TIMESTAMP`,
     [hashSessionToken(token)],
   )
   if (!result.rowCount) { clearSessionCookie(response); return response.json({ user: null }) }
+  if (!result.rows[0].active) { await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashSessionToken(token)]); clearSessionCookie(response); return response.json({ user: null }) }
   response.json({ user: publicUser(result.rows[0]) })
 }))
 
@@ -225,6 +232,70 @@ app.get('/api/db/health', async (_request, response) => {
 })
 
 app.use('/api', requireAuth)
+
+app.get('/api/admin/users', requireAdmin, asyncHandler(async (_request, response) => {
+  const result = await pool.query(
+    `SELECT u.id, u.email, u.name, u.role, u.active, u.created_at,
+            COUNT(DISTINCT pp.problem_id) FILTER (WHERE pp.status = 'solved')::INTEGER AS solved_count,
+            COUNT(DISTINCT pp.problem_id) FILTER (WHERE pp.revision = TRUE)::INTEGER AS revision_count,
+            COUNT(DISTINCT b.problem_id)::INTEGER AS bookmark_count,
+            COUNT(DISTINCT n.problem_id)::INTEGER AS note_count,
+            COUNT(DISTINCT pa.activity_date)::INTEGER AS active_days,
+            MAX(pa.activity_date) AS last_active_date
+     FROM users u
+     LEFT JOIN problem_progress pp ON pp.user_id = u.id
+     LEFT JOIN bookmarks b ON b.user_id = u.id
+     LEFT JOIN notes n ON n.user_id = u.id
+     LEFT JOIN practice_activity pa ON pa.user_id = u.id
+     GROUP BY u.id
+     ORDER BY CASE WHEN u.role = 'admin' THEN 0 ELSE 1 END, u.created_at ASC`,
+  )
+  response.json(result.rows.map((row) => ({
+    id: Number(row.id),
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    active: Boolean(row.active),
+    created_at: row.created_at,
+    solved_count: Number(row.solved_count),
+    revision_count: Number(row.revision_count),
+    bookmark_count: Number(row.bookmark_count),
+    note_count: Number(row.note_count),
+    active_days: Number(row.active_days),
+    last_active_date: row.last_active_date,
+  })))
+}))
+
+app.patch('/api/admin/users/:id/status', requireAdmin, asyncHandler(async (request, response) => {
+  const userId = parsePositiveId(request.params.id)
+  if (!userId) return sendError(response, 400, 'invalid_input', 'User ID must be a positive integer.')
+  if (userId === request.user.id) return sendError(response, 400, 'invalid_input', 'You cannot disable your own account.')
+  const { active } = request.body || {}
+  if (typeof active !== 'boolean') return sendError(response, 400, 'invalid_input', 'active must be a boolean.')
+  const target = await pool.query('SELECT id, email, name, role, active FROM users WHERE id = $1', [userId])
+  if (!target.rowCount) return sendError(response, 404, 'not_found', 'User not found.')
+  if (!active && target.rows[0].role === 'admin') {
+    const adminCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM users WHERE role = \'admin\' AND active = TRUE AND id <> $1', [userId])
+    if (Number(adminCount.rows[0].count) < 1) return sendError(response, 400, 'last_admin', 'At least one active administrator must remain.')
+  }
+  const result = await pool.query('UPDATE users SET active = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, email, name, role, active', [active, userId])
+  if (!active) await pool.query('DELETE FROM sessions WHERE user_id = $1', [userId])
+  response.json({ id: Number(result.rows[0].id), email: result.rows[0].email, name: result.rows[0].name, role: result.rows[0].role, active: Boolean(result.rows[0].active) })
+}))
+
+app.delete('/api/admin/users/:id', requireAdmin, asyncHandler(async (request, response) => {
+  const userId = parsePositiveId(request.params.id)
+  if (!userId) return sendError(response, 400, 'invalid_input', 'User ID must be a positive integer.')
+  if (userId === request.user.id) return sendError(response, 400, 'invalid_input', 'You cannot delete your own account.')
+  const target = await pool.query('SELECT id, role FROM users WHERE id = $1', [userId])
+  if (!target.rowCount) return sendError(response, 404, 'not_found', 'User not found.')
+  if (target.rows[0].role === 'admin') {
+    const adminCount = await pool.query('SELECT COUNT(*)::INTEGER AS count FROM users WHERE role = \'admin\' AND id <> $1', [userId])
+    if (Number(adminCount.rows[0].count) < 1) return sendError(response, 400, 'last_admin', 'You cannot delete the only administrator.')
+  }
+  await pool.query('DELETE FROM users WHERE id = $1', [userId])
+  response.status(204).end()
+}))
 
 app.get('/api/topics', asyncHandler(async (_request, response) => {
   const result = await pool.query('SELECT id, source_topic_id, name, description, order_number FROM topics ORDER BY order_number')

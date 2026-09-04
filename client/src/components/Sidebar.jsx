@@ -22,6 +22,7 @@ function NavigationIcon({ name }) {
     code: <><rect x="3" y="4" width="18" height="14" rx="2" /><path d="m8 10-2 2 2 2m8-4 2 2-2 2m-3-5-2 6" /><path d="M8 21h8" /></>,
     menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
     close: <><path d="M6 6l12 12M18 6 6 18" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
   }
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">{paths[name]}</svg>
 }
@@ -56,6 +57,9 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle, user, onLogout
           <NavigationIcon name={item.icon} /><span>{item.label}</span>
         </button>
       ))}
+      {user?.role === 'admin' ? <button type="button" onClick={() => navigate('admin')} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${activeView === 'admin' ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white'}`}>
+        <NavigationIcon name="users" /><span>Admin</span>
+      </button> : null}
     </nav>
 
     <div className="mt-auto pt-8">
