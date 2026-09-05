@@ -59,17 +59,17 @@ function parseImportedStatement(raw) {
   return { statement, examples, approach, time, space }
 }
 
-function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkChange }) {
+function SolutionPage({ problemId, onStatusChange, onRevisionChange, onBookmarkChange, onRequireAuth }) {
   const [data,setData]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState(''); const [notingProblem,setNotingProblem]=useState(null)
   useEffect(()=>{let cancelled=false; async function load(){setLoading(true);setError('');try{const result=await api.getSolution(problemId);if(!cancelled)setData(result)}catch(e){if(!cancelled)setError(e.message||'Unable to load the solution.')}finally{if(!cancelled)setLoading(false)}} if(problemId)load(); return()=>{cancelled=true}},[problemId])
   if(loading)return <div className="rounded-xl border border-slate-300 bg-white p-8 text-center text-sm text-slate-500 dark:border-[#333333] dark:bg-[#181818] dark:text-slate-400">Loading solution…</div>
   if(error)return <div className="rounded-xl border border-rose-900/50 bg-rose-950/20 p-6 text-sm text-rose-300">{error}</div>
   if(!data?.problem)return <div className="rounded-xl border border-slate-300 bg-white p-8 text-center dark:border-[#333333] dark:bg-[#181818]">Problem not found.</div>
   const {problem,solution}=data
-  async function toggleStatus(){const next=problem.status==='solved'?'not_started':'solved';await onStatusChange(problem.id,next);setData(c=>({...c,problem:{...c.problem,status:next}}))}
-  async function toggleBookmark(){const active=Boolean(problem.bookmarked);await onBookmarkChange(problem.id,active);setData(c=>({...c,problem:{...c.problem,bookmarked:!active}}))}
-  async function toggleRevision(){const active=Boolean(problem.revision);await onRevisionChange(problem.id,!active);setData(c=>({...c,problem:{...c.problem,revision:!active}}))}
-  const notesButton = <button type="button" onClick={()=>setNotingProblem(problem)} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Notes</button>
+  async function toggleStatus(){if(!onStatusChange)return onRequireAuth?.();const next=problem.status==='solved'?'not_started':'solved';await onStatusChange(problem.id,next);setData(c=>({...c,problem:{...c.problem,status:next}}))}
+  async function toggleBookmark(){if(!onBookmarkChange)return onRequireAuth?.();const active=Boolean(problem.bookmarked);await onBookmarkChange(problem.id,active);setData(c=>({...c,problem:{...c.problem,bookmarked:!active}}))}
+  async function toggleRevision(){if(!onRevisionChange)return onRequireAuth?.();const active=Boolean(problem.revision);await onRevisionChange(problem.id,!active);setData(c=>({...c,problem:{...c.problem,revision:!active}}))}
+  const notesButton = <button type="button" onClick={()=>onRequireAuth ? onRequireAuth() : setNotingProblem(problem)} className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Notes</button>
   if(!solution?.available)return <><Breadcrumbs problem={problem}/><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{problem.title}</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400 capitalize">{problem.difficulty} · {problem.topic?.name||'DSA'}</p>{notesButton}{notingProblem && <NoteModal problem={notingProblem} onClose={() => setNotingProblem(null)} />}</>
   const parsed = parseImportedStatement(solution.problem_statement)
   const problemStatement = cleanSectionText(parsed.statement || solution.problem_statement)

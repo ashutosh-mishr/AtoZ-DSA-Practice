@@ -223,9 +223,12 @@ function publicUser(row) {
   return { id: Number(row.id), email: row.email, name: row.name, role: row.role, welcome_message: row.welcome_message || 'Welcome back', is_primary_admin: Boolean(row.is_primary_admin), google_linked: Boolean(row.google_id), password_set: Boolean(row.password_hash) }
 }
 
-const requireAuth = asyncHandler(async (request, response, next) => {
+async function resolveSessionUser(request, response, { required = true } = {}) {
   const token = parseCookies(request.headers.cookie || '')[sessionCookieName]
-  if (!token) return sendError(response, 401, 'unauthorized', 'Please log in to continue.')
+  if (!token) {
+    if (required) sendError(response, 401, 'unauthorized', 'Please log in to continue.')
+    return null
+  }
   const result = await pool.query(
     `SELECT u.id, u.email, u.name, u.role, u.active, u.welcome_message, u.is_primary_admin, u.google_id, u.password_hash
      FROM sessions s JOIN users u ON u.id = s.user_id
@@ -234,14 +237,26 @@ const requireAuth = asyncHandler(async (request, response, next) => {
   )
   if (!result.rowCount) {
     clearSessionCookie(response)
-    return sendError(response, 401, 'unauthorized', 'Your session has expired. Please log in again.')
+    if (required) sendError(response, 401, 'unauthorized', 'Your session has expired. Please log in again.')
+    return null
   }
   if (!result.rows[0].active) {
     await pool.query('DELETE FROM sessions WHERE token_hash = $1', [hashSessionToken(token)])
     clearSessionCookie(response)
-    return sendError(response, 403, 'account_disabled', 'Your account has been disabled. Please contact an administrator.')
+    if (required) sendError(response, 403, 'account_disabled', 'Your account has been disabled. Please contact an administrator.')
+    return null
   }
-  request.user = publicUser(result.rows[0])
+  return publicUser(result.rows[0])
+}
+
+const requireAuth = asyncHandler(async (request, response, next) => {
+  request.user = await resolveSessionUser(request, response, { required: true })
+  if (!request.user) return
+  next()
+})
+
+const optionalAuth = asyncHandler(async (request, response, next) => {
+  request.user = await resolveSessionUser(request, response, { required: false })
   next()
 })
 
@@ -489,7 +504,18 @@ app.get('/api/db/health', async (_request, response) => {
   }
 })
 
-app.use('/api', requireAuth)
+app.use('/api', asyncHandler(async (request, response, next) => {
+  const publicRoute = request.method === 'GET' && (
+    request.path === '/topics' ||
+    request.path.startsWith('/topics/') ||
+    request.path === '/problems' ||
+    request.path.startsWith('/problems/') && request.path.endsWith('/solution') ||
+    /^\/problems\/\d+$/.test(request.path) ||
+    request.path === '/daily-quote'
+  )
+  if (publicRoute) return optionalAuth(request, response, next)
+  return requireAuth(request, response, next)
+}))
 
 app.get('/api/profile', asyncHandler(async (request, response) => {
   const result = await pool.query('SELECT id, email, name, role, welcome_message, is_primary_admin, google_id, password_hash FROM users WHERE id = $1', [request.user.id])
@@ -633,7 +659,7 @@ app.get('/api/topics/:id', asyncHandler(async (request, response) => {
 app.get('/api/problems', asyncHandler(async (request, response) => {
   const { topic_id: topicIdValue, subtopic_id: subtopicIdValue, difficulty, status } = request.query
   const conditions = []
-  const values = [request.user.id]
+  const values = [request.user?.id || null]
 
   if (topicIdValue !== undefined) {
     const topicId = parsePositiveId(topicIdValue)
@@ -682,7 +708,7 @@ app.get('/api/problems', asyncHandler(async (request, response) => {
 }))
 
 app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => {
-  const userId = request.user.id
+  const userId = request.user?.id || null
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
 
@@ -743,7 +769,7 @@ app.get('/api/problems/:id/solution', asyncHandler(async (request, response) => 
 }))
 
 app.get('/api/problems/:id', asyncHandler(async (request, response) => {
-  const userId = request.user.id
+  const userId = request.user?.id || null
   const problemId = getIdOrSendBadRequest(request, response)
   if (!problemId) return
   const result = await pool.query(

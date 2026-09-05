@@ -95,21 +95,24 @@ function SolvedIcon() {
   return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
 }
 
-function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionChange, onProblemUpdate, showEdit = false }) {
+function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionChange, onProblemUpdate, showEdit = false, onRequireAuth }) {
   const [updatingId, setUpdatingId] = useState(null)
   const [openPatternId, setOpenPatternId] = useState(null)
   const [editingProblem, setEditingProblem] = useState(null)
   const [notingProblem, setNotingProblem] = useState(null)
 
   async function changeStatus(problem, event) {
+    if (!onStatusChange) return onRequireAuth?.()
     setUpdatingId(problem.id)
     try { await onStatusChange(problem.id, event.target.checked ? 'solved' : 'not_started') } finally { setUpdatingId(null) }
   }
   async function toggleBookmark(problem) {
+    if (!onBookmarkChange) return onRequireAuth?.()
     setUpdatingId(problem.id)
     try { await onBookmarkChange(problem.id, Boolean(problem.bookmarked)) } finally { setUpdatingId(null) }
   }
   async function toggleRevision(problem) {
+    if (!onRevisionChange) return onRequireAuth?.()
     setUpdatingId(problem.id)
     try { await onRevisionChange(problem.id, !Boolean(problem.revision)) } finally { setUpdatingId(null) }
   }
@@ -129,7 +132,7 @@ function ProblemList({ problems, onStatusChange, onBookmarkChange, onRevisionCha
               <td className="px-4 py-4 text-center"><button type="button" title={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} aria-label={problem.bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(problem)} disabled={updatingId === problem.id} className="inline-flex h-8 w-8 cursor-pointer items-center justify-center border-0 bg-transparent disabled:cursor-wait disabled:opacity-50"><BookmarkIcon active={problem.bookmarked} /></button></td>
               <td className="px-4 py-4 text-center"><IconButton label={problem.revision ? 'Remove from revision' : 'Add to revision'} tone="blue" active={problem.revision} onClick={() => toggleRevision(problem)} disabled={updatingId === problem.id}><RevisionIcon active={problem.revision} /></IconButton></td>
               <td className="relative px-4 py-4 text-center"><IconButton label="View pattern and hint" active={openPatternId === problem.id} onClick={() => setOpenPatternId((current) => current === problem.id ? null : problem.id)}><InfoIcon /></IconButton>{openPatternId === problem.id && <PatternPopover problem={problem} onClose={() => setOpenPatternId(null)} />}</td>
-              <td className="px-4 py-4"><div className="flex flex-nowrap items-center gap-1 overflow-x-auto"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="TUF" tone="article" /><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" /><SolutionLink problem={problem} /><button type="button" title="Open notes" aria-label={`Open notes for ${problem.title}`} onClick={() => setNotingProblem(problem)} className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Notes</button><>{showEdit && <button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#242424] dark:hover:text-slate-200"><EditIcon /></button>}</></div></td>
+              <td className="px-4 py-4"><div className="flex flex-nowrap items-center gap-1 overflow-x-auto"><ExternalLink href={problem.leetcode_url} label="LeetCode" tone="leetcode" /><ExternalLink href={problem.gfg_url} label="GFG" tone="gfg" /><ExternalLink href={problem.article_url} label="TUF" tone="article" /><ExternalLink href={problem.youtube_url} label="YouTube" tone="youtube" /><SolutionLink problem={problem} /><button type="button" title="Open notes" aria-label={`Open notes for ${problem.title}`} onClick={() => onRequireAuth ? onRequireAuth() : setNotingProblem(problem)} className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-300 dark:hover:bg-[#242424]">Notes</button><>{showEdit && <button type="button" title="Edit practice links" aria-label={`Edit practice links for ${problem.title}`} onClick={() => setEditingProblem(problem)} className="ml-1 inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#242424] dark:hover:text-slate-200"><EditIcon /></button>}</></div></td>
             </tr>)}
           </tbody>
         </table>
