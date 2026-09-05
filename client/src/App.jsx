@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useAuth } from './AuthContext'
 import AuthPage from './components/AuthPage'
 import AuthRecoveryPage from './components/AuthRecoveryPage'
@@ -75,9 +75,8 @@ function Breadcrumbs({ items }) {
   })}</nav>
 }
 
-function TrackerApp() {
+function TrackerApp({ isDark, onThemeToggle }) {
   const { user, logout, updateUser } = useAuth()
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
   const [dashboardGreeting, setDashboardGreeting] = useState(user?.welcome_message || 'Welcome back')
   const [view, setView] = useState(() => getRoute().view)
   const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
@@ -130,10 +129,6 @@ function TrackerApp() {
     setDashboardGreeting(user?.welcome_message || 'Welcome back')
   }, [user?.id, user?.welcome_message])
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark)
-    localStorage.setItem('theme', isDark ? 'dark' : 'light')
-  }, [isDark])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -546,12 +541,19 @@ function TrackerApp() {
     window.history.replaceState({}, '', '/dashboard')
   }
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100">{googleNotice ? <div className="fixed right-4 top-4 z-[120] rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-700 shadow-xl dark:border-emerald-900/50 dark:bg-[#171717] dark:text-emerald-300">{googleNotice}</div> : null}<Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={handleLogout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} DSA Practice</footer></div>{accountOpen && user ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={handleLogout} /> : null}{authPromptOpen ? <SignInPromptModal onClose={() => setAuthPromptOpen(false)} onNavigate={handleNavigate} /> : null}</div>
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100">{googleNotice ? <div className="fixed right-4 top-4 z-[120] rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-700 shadow-xl dark:border-emerald-900/50 dark:bg-[#171717] dark:text-emerald-300">{googleNotice}</div> : null}<Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={onThemeToggle} user={user} onLogout={handleLogout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} DSA Practice</footer></div>{accountOpen && user ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={handleLogout} /> : null}{authPromptOpen ? <SignInPromptModal onClose={() => setAuthPromptOpen(false)} onNavigate={handleNavigate} /> : null}</div>
 
 }
 
 function App() {
   const { user, loading } = useAuth()
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark')
+
+  useLayoutEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark)
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+    localStorage.setItem('theme', isDark ? 'dark' : 'light')
+  }, [isDark])
   const [authView, setAuthView] = useState(() => {
     const path = window.location.pathname.replace(/\/$/, '')
     if (path === '/register') return 'register'
@@ -583,7 +585,7 @@ function App() {
   if (user && publicAuthRoute) {
     window.history.replaceState({}, '', '/dashboard')
   }
-  return <TrackerApp />
+  return <TrackerApp isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} />
 }
 
 export default App
