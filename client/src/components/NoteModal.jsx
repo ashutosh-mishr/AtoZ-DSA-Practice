@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 
+const MAX_NOTE_LENGTH = 5000
+
 function NoteModal({ problem, onClose }) {
   const [note, setNote] = useState('')
   const [originalNote, setOriginalNote] = useState('')
@@ -35,6 +37,10 @@ function NoteModal({ problem, onClose }) {
   }, [problem.id])
 
   async function save() {
+    if (note.length > MAX_NOTE_LENGTH) {
+      setError(`Note must be ${MAX_NOTE_LENGTH.toLocaleString()} characters or fewer.`)
+      return
+    }
     setSaving(true)
     setError('')
     setSaved(false)
@@ -76,7 +82,8 @@ function NoteModal({ problem, onClose }) {
           <button type="button" title="Close notes" aria-label="Close notes" onClick={onClose} className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-xl leading-none text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-[#3a3a3a] dark:text-slate-300 dark:hover:bg-[#242424] dark:hover:text-white">×</button>
         </div>
         <div className="p-5">
-          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading note…</p> : <textarea autoFocus={editing} readOnly={!editing} value={note} onChange={(event) => { setNote(event.target.value); setSaved(false); setError('') }} placeholder="Write your notes for this problem…" rows={9} className={`w-full resize-y rounded-xl border px-4 py-3 text-sm leading-6 outline-none ${editing ? 'border-slate-200 bg-white text-slate-800 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100 dark:placeholder:text-slate-500' : 'cursor-default border-slate-200 bg-slate-50 text-slate-700 dark:border-[#333333] dark:bg-[#141414] dark:text-slate-300'}`} />}
+          {loading ? <p className="text-sm text-slate-500 dark:text-slate-400">Loading note…</p> : <textarea autoFocus={editing} readOnly={!editing} value={note} maxLength={MAX_NOTE_LENGTH} onChange={(event) => { setNote(event.target.value); setSaved(false); setError('') }} placeholder="Write your notes for this problem…" rows={9} className={`w-full resize-y rounded-xl border px-4 py-3 text-sm leading-6 outline-none ${editing ? 'border-slate-200 bg-white text-slate-800 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-100 dark:placeholder:text-slate-500' : 'cursor-default border-slate-200 bg-slate-50 text-slate-700 dark:border-[#333333] dark:bg-[#141414] dark:text-slate-300'}`} />}
+          {editing ? <div className="mt-2 flex justify-end"><span className={`text-xs ${note.length >= MAX_NOTE_LENGTH ? 'font-semibold text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>{note.length.toLocaleString()} / {MAX_NOTE_LENGTH.toLocaleString()}</span></div> : null}
           {error ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error}</p> : null}
           {saved ? <p className="mt-3 text-xs font-medium text-emerald-600 dark:text-emerald-400">Note saved successfully.</p> : null}
         </div>

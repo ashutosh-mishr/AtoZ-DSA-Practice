@@ -163,6 +163,8 @@ app.use((request, response, next) => {
 
 app.use(express.json())
 
+const MAX_NOTE_LENGTH = 5000
+
 const asyncHandler = (handler) => (request, response, next) => {
   Promise.resolve(handler(request, response, next)).catch(next)
 }
@@ -1091,6 +1093,7 @@ app.put('/api/problems/:id/note', asyncHandler(async (request, response) => {
   if (!problemId) return
   const { content } = request.body
   if (typeof content !== 'string') return sendError(response, 400, 'invalid_input', 'content must be a string.')
+  if (content.length > MAX_NOTE_LENGTH) return sendError(response, 400, 'invalid_input', `Note must be ${MAX_NOTE_LENGTH} characters or fewer.`)
   if (!(await requireProblem(problemId, response))) return
   const result = await pool.query(
     `INSERT INTO notes (user_id, problem_id, content) VALUES ($1, $2, $3)
