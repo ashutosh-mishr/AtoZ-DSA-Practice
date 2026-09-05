@@ -104,6 +104,6 @@ export default function AuthRecoveryPage({ mode = 'forgot', onNavigate }) {
         </div>
       </section>
     </div>
-    <footer className="auth-footer">© 2026 DSA Practice. All rights reserved.</footer>
+    <footer className="auth-footer">© 2026 DSA Practice</footer>
   </div>
 }

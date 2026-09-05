@@ -177,6 +177,6 @@ export default function AuthPage({ mode = 'login', onNavigate }) {
         </div>
       </section>
     </div>
-    <footer className="auth-footer">© 2026 DSA Practice. All rights reserved.</footer>
+    <footer className="auth-footer">© 2026 DSA Practice</footer>
   </div>
 }

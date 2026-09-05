@@ -9,7 +9,38 @@ function formatDay(date) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
 }
 
-function StreakPage() {
+function GuestStreakPreview() {
+  return <>
+    <div className="mb-8">
+      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Build your daily solving habit</h1>
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">Your streak keeps track of the days you actively practice DSA. Sign in when you are ready to start saving your activity.</p>
+    </div>
+
+    <section className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Streak preview">
+      {[['Current Streak', '—', '🔥'], ['Longest Streak', '—', '🏆'], ['Active Days', '—', '✓'], ['Problems solved', '—', '↗']].map(([label, value, icon]) => <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717]"><div className="flex items-center justify-between"><p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p><span className="text-base text-violet-500" aria-hidden="true">{icon}</span></div><p className="mt-4 text-2xl font-semibold">{value}</p></article>)}
+    </section>
+
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#303030] dark:bg-[#171717] sm:p-6" aria-label="Streak activity preview">
+      <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xl font-semibold">Your activity calendar</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Each square represents a day. More practice means a stronger activity level.</p>
+        </div>
+        <span className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">Preview</span>
+      </div>
+      <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-14 sm:gap-2">
+        {Array.from({ length: 98 }, (_, index) => <span key={index} className="h-4 w-4 rounded-[3px] border border-slate-200 bg-slate-100 dark:border-[#3a3a3a] dark:bg-[#242424] sm:h-5 sm:w-5" />)}
+      </div>
+      <div className="mt-7 rounded-2xl border border-dashed border-violet-200 bg-violet-50/60 p-6 text-center dark:border-violet-500/20 dark:bg-violet-500/5">
+        <div className="text-2xl">🔥</div>
+        <h2 className="mt-2 font-semibold">Start your streak</h2>
+        <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">Sign in to record your practice days, build consecutive-day streaks and keep your longest streak.</p>
+      </div>
+    </section>
+  </>
+}
+
+function StreakPage({ guest = false }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -24,7 +55,7 @@ function StreakPage() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { if (!guest) load() }, [guest])
 
   const activity = useMemo(() => new Map((data?.activity || []).map((item) => [item.date, Number(item.problems_solved)])), [data])
 
@@ -64,6 +95,8 @@ function StreakPage() {
     'bg-emerald-700 dark:bg-emerald-500',
   ]
   const years = Array.from({ length: 5 }, (_, index) => firstYear + index)
+
+  if (guest) return <GuestStreakPreview />
 
   if (loading) return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">Loading your streak…</div>
   if (error) return <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center dark:border-rose-900/50 dark:bg-rose-950/30"><p className="font-medium text-rose-800 dark:text-rose-200">Unable to load streak</p><p className="mt-1 text-sm text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={load} className="mt-4 rounded-lg bg-rose-700 px-3 py-2 text-sm font-medium text-white">Try again</button></div>

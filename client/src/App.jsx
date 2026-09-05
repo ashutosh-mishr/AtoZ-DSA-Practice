@@ -12,6 +12,7 @@ import StreakPage from './components/StreakPage'
 import SolutionPage from './components/SolutionPage'
 import AdminPage from './components/AdminPage'
 import AccountModal from './components/AccountModal'
+import SignInPromptModal from './components/SignInPromptModal'
 
 function LoadingState() {
   return <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-sm dark:border-[#303030] dark:bg-[#171717] dark:text-slate-400">Loading your practice data…</div>
@@ -81,6 +82,7 @@ function TrackerApp() {
   const [view, setView] = useState(() => getRoute().view)
   const [solutionProblemId, setSolutionProblemId] = useState(() => getRoute().problemId || null)
   const [accountOpen, setAccountOpen] = useState(false)
+  const [authPromptOpen, setAuthPromptOpen] = useState(false)
   const [googleNotice, setGoogleNotice] = useState('')
   const [roadmapSearch, setRoadmapSearch] = useState('')
   const [roadmapProblems, setRoadmapProblems] = useState([])
@@ -103,6 +105,26 @@ function TrackerApp() {
     revision: { items: [], loading: false, error: '' },
     bookmarks: { items: [], loading: false, error: '' },
   })
+
+  const topicProgressById = new Map((progress?.topics || []).map((topic) => [topic.id, topic]))
+  const publicTopicCounts = useMemo(() => {
+    const counts = new Map()
+    roadmapProblems.forEach((problem) => {
+      const id = Number(problem.topic?.id)
+      if (!id) return
+      const current = counts.get(id) || { total: 0, solved: 0 }
+      current.total += 1
+      if (problem.status === 'solved') current.solved += 1
+      counts.set(id, current)
+    })
+    return counts
+  }, [roadmapProblems])
+  const roadmapTopics = useMemo(() => topics.map((topic) => {
+    const personal = topicProgressById.get(Number(topic.id))
+    if (personal) return { ...topic, ...personal }
+    const counts = publicTopicCounts.get(Number(topic.id)) || { total: 0, solved: 0 }
+    return { ...topic, total: counts.total, solved: 0, revision: 0, not_started: counts.total, completion_percentage: 0 }
+  }), [topics, progress, publicTopicCounts])
 
   useEffect(() => {
     setDashboardGreeting(user?.welcome_message || 'Welcome back')
@@ -130,10 +152,15 @@ function TrackerApp() {
     if (showLoading) setIsCoreLoading(true)
     setCoreError('')
     try {
-      const [progressData, topicsData, problemsData] = await Promise.all([api.getProgress(), api.getTopics(), api.getProblems()])
-      setProgress(progressData)
+      const [topicsData, problemsData] = await Promise.all([api.getTopics(), api.getProblems()])
       setTopics(topicsData)
       setRoadmapProblems(problemsData)
+      if (user) {
+        const progressData = await api.getProgress()
+        setProgress(progressData)
+      } else {
+        setProgress(null)
+      }
     } catch (error) {
       setCoreError(error.message)
     } finally {
@@ -142,6 +169,10 @@ function TrackerApp() {
   }
 
   function handleNavigate(nextView) {
+    if (['login', 'register', 'forgot-password', 'reset-password'].includes(nextView)) {
+      window.location.assign(`/${nextView}`)
+      return
+    }
     if (nextView === 'roadmap') {
       setRoadmapSearch('')
       setOpenSubtopics(new Set())
@@ -187,7 +218,7 @@ function TrackerApp() {
     const handlePopState = () => {
       const route = getRoute()
       if (route.view === 'topic') {
-        const topic = topics.find((item) => Number(item.id) === route.topicId)
+        const topic = roadmapTopics.find((item) => Number(item.id) === route.topicId)
         if (topic) loadTopicProblems(topic, { updateUrl: false })
       } else {
         setSelectedTopic(null)
@@ -197,23 +228,25 @@ function TrackerApp() {
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [topics])
+  }, [roadmapTopics])
 
   useEffect(() => {
     const route = getRoute()
-    if (route.view === 'topic' && topics.length) {
-      const topic = topics.find((item) => Number(item.id) === route.topicId)
+    if (route.view === 'topic' && roadmapTopics.length) {
+      const topic = roadmapTopics.find((item) => Number(item.id) === route.topicId)
       if (topic && (!selectedTopic || Number(selectedTopic.id) !== Number(topic.id))) loadTopicProblems(topic, { updateUrl: false })
     }
-  }, [topics])
+  }, [roadmapTopics])
 
   useEffect(() => {
     if (view !== 'dashboard') return
     const date = new Intl.DateTimeFormat('en-CA').format(new Date())
-    Promise.all([api.getDailyQuote(date), api.getStreaks(date)])
-      .then(([quoteData, streakData]) => { setQuote(quoteData); setStreakSummary(streakData) })
+    const requests = [api.getDailyQuote(date)]
+    if (user) requests.push(api.getStreaks(date))
+    Promise.all(requests)
+      .then((results) => { setQuote(results[0]); setStreakSummary(user ? results[1] : null) })
       .catch(() => { setQuote(null); setStreakSummary(null) })
-  }, [view])
+  }, [view, user])
 
   useEffect(() => {
     let cancelled = false
@@ -235,10 +268,12 @@ function TrackerApp() {
     }
   }, [])
   useEffect(() => {
-    if (view === 'revision' || view === 'bookmarks') loadCollection(view)
-  }, [view])
+    if (user && (view === 'revision' || view === 'bookmarks')) loadCollection(view)
+    if (!user) setCollections({ revision: { items: [], loading: false, error: '' }, bookmarks: { items: [], loading: false, error: '' } })
+  }, [view, user])
 
   async function handleStatusChange(id, status) {
+    if (!user) { setAuthPromptOpen(true); return }
     try {
       const activityDate = new Intl.DateTimeFormat('en-CA').format(new Date())
       await api.updateStatus(id, status, activityDate)
@@ -255,6 +290,7 @@ function TrackerApp() {
   }
 
   async function handleRevisionChange(id, revision) {
+    if (!user) { setAuthPromptOpen(true); return }
     try {
       await api.updateRevision(id, revision)
       await loadCoreData(false)
@@ -269,6 +305,7 @@ function TrackerApp() {
   }
 
   async function handleProblemUpdate(id, fields) {
+    if (!user) { setAuthPromptOpen(true); return }
     try {
       const updated = await api.updateProblem(id, fields)
       const mergeUpdated = (items) => items.map((problem) => problem.id === id ? { ...problem, ...updated } : problem)
@@ -286,6 +323,7 @@ function TrackerApp() {
   }
 
   async function handleBookmarkChange(id, bookmarked) {
+    if (!user) { setAuthPromptOpen(true); return }
     try {
       if (bookmarked) await api.removeBookmark(id)
       else await api.createBookmark(id)
@@ -300,12 +338,31 @@ function TrackerApp() {
     }
   }
 
-  const topicProgressById = new Map((progress?.topics || []).map((topic) => [topic.id, topic]))
-  const roadmapTopics = useMemo(() => topics.map((topic) => ({ ...topic, ...(topicProgressById.get(Number(topic.id)) || {}) })), [topics, progress])
-
   function renderDashboard() {
     if (isCoreLoading) return <LoadingState />
     if (coreError) return <ErrorState message={coreError} onRetry={() => loadCoreData()} />
+    if (!user) {
+      const totalProblems = roadmapProblems.length
+      const topicCount = topics.length
+      const subtopicCount = new Set(roadmapProblems.map((problem) => problem.subtopic?.id).filter(Boolean)).size
+      return <>
+        <Breadcrumbs items={[{ label: 'dashboard' }]} />
+        <section className="rounded-3xl border border-violet-200 bg-white p-7 shadow-sm dark:border-violet-500/20 dark:bg-[#171717] sm:p-10">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-400">DSA Practice</p>
+          <h1 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight sm:text-5xl">Learn without login. Track with login.</h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500 dark:text-slate-400">Explore the complete DSA roadmap, practice problems and solutions freely. Sign in only when you want to save your progress.</p>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {[['Problems', totalProblems], ['Topics', topicCount], ['Subtopics', subtopicCount]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-[#303030] dark:bg-[#111111]"><p className="text-sm text-slate-500 dark:text-slate-400">{label}</p><p className="mt-2 text-3xl font-semibold">{value}</p></div>)}
+          </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button type="button" onClick={() => handleNavigate('roadmap')} className="cursor-pointer rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700">Explore roadmap</button>
+            <button type="button" onClick={() => handleNavigate('practice')} className="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-[#3a3a3a] dark:bg-[#111111] dark:text-slate-200 dark:hover:bg-[#242424]">Start practicing</button>
+            <button type="button" onClick={() => setAuthPromptOpen(true)} className="cursor-pointer px-2 py-3 text-sm font-semibold text-violet-600 hover:text-violet-700 dark:text-violet-400">Create account</button>
+          </div>
+        </section>
+      </>
+    }
+
     if (!progress) return null
 
     const revisionCount = Number(progress.revision || 0)
@@ -444,7 +501,7 @@ function TrackerApp() {
           <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><span className="sr-only">Difficulty</span><select value={topicDifficultyFilter} onChange={(event) => setTopicDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></label>
         </div>
       </div>}
-      {topicProblems.loading ? <LoadingState /> : topicProblems.error ? <ErrorState message={topicProblems.error} onRetry={() => loadTopicProblems(selectedTopic)} /> : filteredProblems.length ? <div className="space-y-3">{Object.entries(grouped).map(([key, group]) => { const isOpen = openSubtopics.has(key); const fullGroupItems = topicProblems.items.filter((problem) => String(problem.subtopic?.id || problem.subtopic?.name || 'other') === String(key)); const groupSolved = fullGroupItems.filter((problem) => problem.status === 'solved').length; const groupProgress = fullGroupItems.length ? Math.round((groupSolved / fullGroupItems.length) * 100) : 0; return <section key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#303030] dark:bg-[#171717]" aria-labelledby={`subtopic-${key}`}><button type="button" onClick={() => toggleSubtopic(key)} aria-expanded={isOpen} className="w-full cursor-pointer px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-[#242424]/50"><div className="flex items-center gap-4"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-transform dark:border-[#3a3a3a] dark:text-slate-300 ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span><div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 id={`subtopic-${key}`} className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">{group.name}</h2><div className="flex shrink-0 items-center gap-3"><div className="w-28 sm:w-36"><div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400"><span>{groupSolved}/{fullGroupItems.length} solved</span><span>{groupProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-[#242424]"><div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${groupProgress}%` }} /></div></div><span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{group.items.length} {group.items.length === 1 ? 'problem' : 'problems'}</span></div></div></div></div></button>{isOpen ? <div className="border-t border-slate-200 p-3 dark:border-[#303030] sm:p-4"><ProblemList problems={group.items} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} showEdit={user?.role === 'admin'} /></div> : null}</section>})}</div> : <EmptyState title="No problems match these filters" detail="Try All problems or change the selected filters." />}
+      {topicProblems.loading ? <LoadingState /> : topicProblems.error ? <ErrorState message={topicProblems.error} onRetry={() => loadTopicProblems(selectedTopic)} /> : filteredProblems.length ? <div className="space-y-3">{Object.entries(grouped).map(([key, group]) => { const isOpen = openSubtopics.has(key); const fullGroupItems = topicProblems.items.filter((problem) => String(problem.subtopic?.id || problem.subtopic?.name || 'other') === String(key)); const groupSolved = fullGroupItems.filter((problem) => problem.status === 'solved').length; const groupProgress = fullGroupItems.length ? Math.round((groupSolved / fullGroupItems.length) * 100) : 0; return <section key={key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#303030] dark:bg-[#171717]" aria-labelledby={`subtopic-${key}`}><button type="button" onClick={() => toggleSubtopic(key)} aria-expanded={isOpen} className="w-full cursor-pointer px-5 py-4 text-left hover:bg-slate-50 dark:hover:bg-[#242424]/50"><div className="flex items-center gap-4"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-transform dark:border-[#3a3a3a] dark:text-slate-300 ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">⌄</span><div className="min-w-0 flex-1"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><h2 id={`subtopic-${key}`} className="min-w-0 text-base font-semibold text-slate-900 dark:text-slate-100 sm:text-lg">{group.name}</h2><div className="flex shrink-0 items-center gap-3"><div className="w-28 sm:w-36"><div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400"><span>{groupSolved}/{fullGroupItems.length} solved</span><span>{groupProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-[#242424]"><div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${groupProgress}%` }} /></div></div><span className="hidden text-xs text-slate-500 dark:text-slate-400 md:inline">{group.items.length} {group.items.length === 1 ? 'problem' : 'problems'}</span></div></div></div></div></button>{isOpen ? <div className="border-t border-slate-200 p-3 dark:border-[#303030] sm:p-4"><ProblemList problems={group.items} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} showEdit={user?.role === 'admin'} onRequireAuth={!user ? () => setAuthPromptOpen(true) : undefined} /></div> : null}</section>})}</div> : <EmptyState title="No problems match these filters" detail="Try All problems or change the selected filters." />}
     </>
   }
 
@@ -459,19 +516,37 @@ function TrackerApp() {
       <Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: title }]} />
       <div className="mb-8"><h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title} problems</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{detail}</p></div>
       {!collection.loading && !collection.error && collection.items.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-[#303030] dark:bg-[#111111]"><p className="text-xs font-medium text-slate-500 dark:text-slate-400">Showing {filtered.length} of {collection.items.length} problems</p><div className="flex flex-wrap gap-2"><select value={collectionStatusFilter} onChange={(event) => setCollectionStatusFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">All problems</option><option value="solved">Solved</option><option value="unsolved">Unsolved</option></select><select value={collectionDifficultyFilter} onChange={(event) => setCollectionDifficultyFilter(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-[#3a3a3a] dark:bg-[#171717] dark:text-slate-100"><option value="all">Difficulty</option><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div></div>}
-      {collection.loading ? <LoadingState /> : collection.error ? <ErrorState message={collection.error} onRetry={() => loadCollection(name)} /> : filtered.length ? <ProblemList problems={name === 'bookmarks' ? filtered.map((problem) => ({ ...problem, bookmarked: true })) : filtered} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} /> : <EmptyState title={`No ${name} problems match these filters`} detail="Try All problems or change the selected filters." />}
+      {collection.loading ? <LoadingState /> : collection.error ? <ErrorState message={collection.error} onRetry={() => loadCollection(name)} /> : filtered.length ? <ProblemList problems={name === 'bookmarks' ? filtered.map((problem) => ({ ...problem, bookmarked: true })) : filtered} onStatusChange={handleStatusChange} onBookmarkChange={handleBookmarkChange} onRevisionChange={handleRevisionChange} onProblemUpdate={handleProblemUpdate} onRequireAuth={!user ? () => setAuthPromptOpen(true) : undefined} /> : <EmptyState title={`No ${name} problems match these filters`} detail="Try All problems or change the selected filters." />}
     </>
   }
 
-  if (view === 'admin' && user?.role !== 'admin') {
-    window.history.replaceState({}, '', '/dashboard')
-    setView('dashboard')
-    return null
+  const personalView = ['revision', 'bookmarks', 'admin'].includes(view)
+
+  function renderAuthRequired(title, detail) {
+    return <div className="mx-auto max-w-xl rounded-2xl border border-violet-200 bg-white p-8 text-center shadow-sm dark:border-violet-500/20 dark:bg-[#171717]">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-violet-500/10 text-xl">🔒</div>
+      <h1 className="mt-4 text-2xl font-semibold">{title}</h1>
+      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{detail}</p>
+      <button type="button" onClick={() => setAuthPromptOpen(true)} className="mt-6 cursor-pointer rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white hover:bg-violet-700">Sign in to continue</button>
+    </div>
   }
 
-  const content = view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'admin' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Admin' }]} /><AdminPage currentUser={user} /></> : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={handleStatusChange} onRevisionChange={handleRevisionChange} onBookmarkChange={handleBookmarkChange} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={handleStatusChange} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
+  const content = !user && personalView
+    ? renderAuthRequired(view === 'admin' ? 'Administrator access' : 'Your personal tracker', view === 'admin' ? 'Sign in with an administrator account to open this page.' : 'Sign in to view your saved progress, revision list, bookmarks and streaks.')
+    : view === 'admin' && user?.role !== 'admin'
+      ? renderAuthRequired('Administrator access', 'This page is available only to administrators.')
+      : view === 'dashboard' ? renderDashboard() : view === 'roadmap' ? renderRoadmap() : view === 'topic' ? renderTopic() : view === 'admin' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Admin' }]} /><AdminPage currentUser={user} /></> : view === 'solution' ? <SolutionPage problemId={solutionProblemId} onStatusChange={user ? handleStatusChange : null} onRevisionChange={user ? handleRevisionChange : null} onBookmarkChange={user ? handleBookmarkChange : null} onRequireAuth={() => setAuthPromptOpen(true)} /> : view === 'practice' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Practice' }]} /><PracticePage onStatusChange={user ? handleStatusChange : null} onRequireAuth={() => setAuthPromptOpen(true)} /></> : view === 'streaks' ? <><Breadcrumbs items={[{ label: 'dashboard', onClick: () => handleNavigate('dashboard') }, { label: 'Streaks' }]} /><StreakPage guest={!user} /></> : renderCollection(view, view === 'revision' ? 'Revision' : 'Bookmarks', view === 'revision' ? 'Revisit these problems when you are ready.' : 'Your saved problems in one place.')
 
-  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100">{googleNotice ? <div className="fixed right-4 top-4 z-[120] rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-700 shadow-xl dark:border-emerald-900/50 dark:bg-[#171717] dark:text-emerald-300">{googleNotice}</div> : null}<Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={logout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} Ashutosh Mishra · DSA Practice Tracker · All rights reserved.</footer></div>{accountOpen ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={async () => { setAccountOpen(false); await logout() }} /> : null}</div>
+  async function handleLogout() {
+    await logout()
+    setAccountOpen(false)
+    setSelectedTopic(null)
+    setSolutionProblemId(null)
+    setView('dashboard')
+    window.history.replaceState({}, '', '/dashboard')
+  }
+
+  return <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 transition-colors dark:bg-[#101010] dark:text-slate-100">{googleNotice ? <div className="fixed right-4 top-4 z-[120] rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm font-medium text-emerald-700 shadow-xl dark:border-emerald-900/50 dark:bg-[#171717] dark:text-emerald-300">{googleNotice}</div> : null}<Sidebar activeView={view === 'topic' ? 'roadmap' : view} onNavigate={handleNavigate} isDark={isDark} onThemeToggle={() => setIsDark((current) => !current)} user={user} onLogout={handleLogout} onAccount={() => setAccountOpen(true)} /><div className="flex min-h-screen flex-1 flex-col lg:pl-64"><main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-8 pt-20 sm:px-6 sm:pt-20 lg:px-8 lg:py-8">{content}</main><footer className="mx-auto w-full max-w-7xl border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 dark:border-[#303030] dark:text-slate-500 sm:px-6 lg:px-8">© {new Date().getFullYear()} DSA Practice</footer></div>{accountOpen && user ? <AccountModal user={user} onClose={() => setAccountOpen(false)} onUserUpdated={updateUser} onLogout={handleLogout} /> : null}{authPromptOpen ? <SignInPromptModal onClose={() => setAuthPromptOpen(false)} onNavigate={handleNavigate} /> : null}</div>
 
 }
 
@@ -499,13 +574,15 @@ function App() {
 
   if (loading) return <div className="grid min-h-screen place-items-center bg-slate-50 text-sm text-slate-500 dark:bg-[#101010] dark:text-slate-400">Checking your account…</div>
 
-  const publicAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(window.location.pathname.replace(/\/$/, ''))
+  const path = window.location.pathname.replace(/\/$/, '')
+  const publicAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(path)
   if (!user && publicAuthRoute) {
     if (authView === 'forgot-password' || authView === 'reset-password') return <AuthRecoveryPage mode={authView === 'reset-password' ? 'reset' : 'forgot'} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
     return <AuthPage mode={authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
   }
-  if (!user) return <AuthPage mode={authView === 'forgot-password' || authView === 'reset-password' ? 'login' : authView} onNavigate={(next) => { window.history.pushState({}, '', `/${next}`); setAuthView(next) }} />
-  if (window.location.pathname === '/login' || window.location.pathname === '/register') window.history.replaceState({}, '', '/dashboard')
+  if (user && publicAuthRoute) {
+    window.history.replaceState({}, '', '/dashboard')
+  }
   return <TrackerApp />
 }
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 
 const navigation = [
-  { label: 'Dashboard', view: 'dashboard', icon: 'grid' },
-  { label: 'DSA Roadmap', view: 'roadmap', icon: 'map' },
-  { label: 'Streak', view: 'streaks', icon: 'flame' },
-  { label: 'Practice', view: 'practice', icon: 'play' },
+  { label: 'Dashboard', view: 'dashboard', icon: 'grid', public: true },
+  { label: 'DSA Roadmap', view: 'roadmap', icon: 'map', public: true },
+  { label: 'Streak', view: 'streaks', icon: 'flame', public: true },
+  { label: 'Practice', view: 'practice', icon: 'play', public: true },
   { label: 'Bookmark', view: 'bookmarks', icon: 'bookmark' },
   { label: 'Revision', view: 'revision', icon: 'refresh' },
 ]
@@ -53,7 +53,7 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle, user, onLogout
     </div>
 
     <nav className="mt-8 space-y-1" aria-label="Primary navigation">
-      {navigation.map((item) => (
+      {navigation.filter((item) => user || item.public).map((item) => (
         <button key={item.label} type="button" onClick={() => navigate(item.view)} className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${activeView === item.view ? 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-[#242424] dark:hover:text-white'}`}>
           <NavigationIcon name={item.icon} /><span>{item.label}</span>
         </button>
@@ -64,6 +64,11 @@ function Sidebar({ activeView, onNavigate, isDark, onThemeToggle, user, onLogout
     </nav>
 
     <div className="mt-auto pt-8">
+      {!user ? <div className="rounded-xl border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/20 dark:bg-violet-500/10">
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Track your progress</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">Sign in to save solved problems, bookmarks, revision, notes and streaks.</p>
+        <button type="button" onClick={() => navigate('login')} className="mt-3 w-full cursor-pointer rounded-lg bg-violet-600 px-3 py-2 text-xs font-semibold text-white hover:bg-violet-700">Sign in</button>
+      </div> : null}
       {user ? <div className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2.5 dark:border-[#303030] dark:bg-[#171717]">
         <button type="button" onClick={onAccount} className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-1 py-1 text-left hover:bg-white dark:hover:bg-[#242424]" title="Account Settings">
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-violet-500/10 text-sm font-bold text-violet-700 dark:text-violet-300">{(user.name || user.email || '?').slice(0, 1).toUpperCase()}</div>
