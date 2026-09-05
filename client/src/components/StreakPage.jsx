@@ -9,7 +9,84 @@ function formatDay(date) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
 }
 
+function HeatmapTooltip({ day, position }) {
+  if (!day) return null
+
+  return <div
+    className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md border border-slate-600 bg-[#252525] px-3 py-1.5 text-xs font-medium text-slate-100 shadow-xl whitespace-nowrap"
+    style={{ left: position.left, top: position.top - 8 }}
+    role="status"
+  >
+    {day.label}: {day.guest ? 'Sign in to track activity' : `${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`}
+  </div>
+}
+
+function useHeatmapTooltip() {
+  const [hoveredDay, setHoveredDay] = useState(null)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+
+  function show(day, element) {
+    if (!day || !element) return
+    const rect = element.getBoundingClientRect()
+    const tooltipWidth = 220
+    const halfWidth = tooltipWidth / 2
+    const left = Math.max(halfWidth + 8, Math.min(window.innerWidth - halfWidth - 8, rect.left + rect.width / 2))
+    const top = Math.max(52, rect.top)
+    setPosition({ left, top })
+    setHoveredDay(day)
+  }
+
+  function hide() {
+    setHoveredDay(null)
+  }
+
+  return { hoveredDay, position, show, hide }
+}
+
+function HeatmapGrid({ month, selectedYear, guest, tooltip }) {
+  return <div className="shrink-0">
+    <p className="mb-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">{month.label}</p>
+    <div className="grid grid-flow-col grid-rows-7 auto-cols-[14px] gap-1" aria-label={`${month.label} ${selectedYear}`}>
+      {month.cells.map((day, index) => day ? <div
+        key={day.date}
+        tabIndex={0}
+        aria-label={guest ? `${day.label}: sign in to track activity` : `${day.label}: ${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`}
+        onMouseEnter={(event) => tooltip.show({ ...day, guest }, event.currentTarget)}
+        onMouseLeave={tooltip.hide}
+        onFocus={(event) => tooltip.show({ ...day, guest }, event.currentTarget)}
+        onBlur={tooltip.hide}
+        className={`h-3.5 w-3.5 cursor-default rounded-[3px] border border-slate-200 outline-none focus:ring-2 focus:ring-violet-500/60 dark:border-[#3a3a3a] ${day.future ? 'opacity-35' : ''} ${guest ? 'bg-slate-100 dark:bg-[#242424]' : month.levelClasses[month.level(day.count)]}`}
+      /> : <div key={`empty-${selectedYear}-${month.label}-${index}`} className="h-3.5 w-3.5" aria-hidden="true" />)}
+    </div>
+  </div>
+}
+
 function GuestStreakPreview() {
+  const selectedYear = 2026
+  const tooltip = useHeatmapTooltip()
+  const months = useMemo(() => Array.from({ length: 12 }, (_, monthIndex) => {
+    const first = new Date(selectedYear, monthIndex, 1)
+    const last = new Date(selectedYear, monthIndex + 1, 0)
+    const leading = first.getDay()
+    const totalDays = last.getDate()
+    const cells = Array.from({ length: leading + totalDays }, (_, index) => {
+      if (index < leading) return null
+      const date = new Date(selectedYear, monthIndex, index - leading + 1)
+      const key = localDateKey(date)
+      const isFuture = date > new Date(`${localDateKey()}T00:00:00`)
+      return { date: key, count: 0, label: formatDay(date), future: isFuture }
+    })
+    const weekCount = Math.ceil(cells.length / 7)
+    while (cells.length < weekCount * 7) cells.push(null)
+    return { label: new Intl.DateTimeFormat(undefined, { month: 'short' }).format(first), cells, weekCount }
+  }), [])
+
+  const guestMonthData = months.map((month) => ({
+    ...month,
+    levelClasses: ['bg-slate-100 dark:bg-[#242424]'],
+    level: () => 0,
+  }))
+
   return <>
     <div className="mb-8">
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Build your daily solving habit</h1>
@@ -28,9 +105,12 @@ function GuestStreakPreview() {
         </div>
         <span className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">Preview</span>
       </div>
-      <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-14 sm:gap-2">
-        {Array.from({ length: 98 }, (_, index) => <span key={index} className="h-4 w-4 rounded-[3px] border border-slate-200 bg-slate-100 dark:border-[#3a3a3a] dark:bg-[#242424] sm:h-5 sm:w-5" />)}
+      <div className="overflow-x-auto pb-2">
+        <div className="flex min-w-max items-start gap-[14px]">
+          {guestMonthData.map((month) => <HeatmapGrid key={`${selectedYear}-${month.label}`} month={month} selectedYear={selectedYear} guest tooltip={tooltip} />)}
+        </div>
       </div>
+      <HeatmapTooltip day={tooltip.hoveredDay} position={tooltip.position} />
       <div className="mt-7 rounded-2xl border border-dashed border-violet-200 bg-violet-50/60 p-6 text-center dark:border-violet-500/20 dark:bg-violet-500/5">
         <div className="text-2xl">🔥</div>
         <h2 className="mt-2 font-semibold">Start your streak</h2>
@@ -86,6 +166,7 @@ function StreakPage({ guest = false }) {
   }, [months])
 
   const maxCount = Math.max(1, ...months.flatMap((month) => month.cells).filter(Boolean).map((day) => day.count))
+  const tooltip = useHeatmapTooltip()
   const level = (count) => count === 0 ? 0 : Math.min(4, Math.ceil((count / maxCount) * 4))
   const levelClasses = [
     'bg-slate-100 dark:bg-[#242424]',
@@ -132,15 +213,16 @@ function StreakPage({ guest = false }) {
       </div>
 
       <div className="overflow-x-auto pb-2">
-        <div className="flex min-w-max items-start gap-4">
-          {months.map((month) => <div key={`${selectedYear}-${month.label}`} className="shrink-0">
-            <p className="mb-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">{month.label}</p>
-            <div className="grid grid-flow-col grid-rows-7 auto-cols-[14px] gap-1" aria-label={`${month.label} ${selectedYear}`}>
-              {month.cells.map((day, index) => day ? <div key={day.date} title={`${day.label}: ${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`} aria-label={`${day.label}: ${day.count} ${day.count === 1 ? 'problem' : 'problems'} solved`} className={`h-3.5 w-3.5 rounded-[3px] border border-slate-200 dark:border-[#3a3a3a] ${day.future ? 'opacity-35' : ''} ${levelClasses[level(day.count)]}`} /> : <div key={`empty-${selectedYear}-${month.label}-${index}`} className="h-3.5 w-3.5" aria-hidden="true" />)}
-            </div>
-          </div>)}
+        <div className="flex min-w-max items-start gap-[14px]">
+          {months.map((month) => <HeatmapGrid
+            key={`${selectedYear}-${month.label}`}
+            month={{ ...month, levelClasses, level }}
+            selectedYear={selectedYear}
+            tooltip={tooltip}
+          />)}
         </div>
       </div>
+      <HeatmapTooltip day={tooltip.hoveredDay} position={tooltip.position} />
 
       <div className="mt-5 flex items-center justify-end gap-2 text-xs text-slate-400 dark:text-slate-500"><span>Less</span>{levelClasses.map((className, index) => <span key={index} className={`h-3.5 w-3.5 rounded-[3px] border border-slate-200 dark:border-[#3a3a3a] ${className}`} />)}<span>More</span></div>
     </section>
