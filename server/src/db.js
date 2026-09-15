@@ -1,21 +1,32 @@
 import 'dotenv/config'
+
 import pg from 'pg'
 
 const { Pool } = pg
 
+const databaseUrl = process.env.DATABASE_URL
+
 const requiredEnvironmentVariables = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER']
+
 const missingVariables = requiredEnvironmentVariables.filter((name) => !process.env[name])
 
-if (missingVariables.length > 0) {
+if (!databaseUrl && missingVariables.length > 0) {
   throw new Error(`Missing required database environment variables: ${missingVariables.join(', ')}`)
 }
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-})
+const pool = databaseUrl
+  ? new Pool({
+      connectionString: databaseUrl,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    })
+  : new Pool({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT),
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+    })
 
 pool.on('error', (error) => {
   console.error('Unexpected PostgreSQL pool error:', error)
