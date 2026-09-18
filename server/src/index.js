@@ -5,7 +5,7 @@ import pool, { getDatabaseTime } from './db.js'
 
 const app = express()
 const port = process.env.PORT || 3000
-const clientUrls = (process.env.CLIENT_URLS || 'http://localhost:5173')
+const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
   .map(origin => origin.trim().replace(/\/$/, ''))
   .filter(Boolean)
@@ -13,7 +13,7 @@ const clientUrls = (process.env.CLIENT_URLS || 'http://localhost:5173')
 const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  ...clientUrls,
+  ...clientUrl,
 ])
 const validStatuses = new Set(['not_started', 'solved'])
 const validDifficulties = new Set(['easy', 'medium', 'hard'])
