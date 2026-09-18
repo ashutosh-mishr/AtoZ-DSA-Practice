@@ -5,7 +5,13 @@ import pool, { getDatabaseTime } from './db.js'
 
 const app = express()
 const port = process.env.PORT || 3000
-const allowedOrigins = new Set(['http://localhost:5173', 'http://127.0.0.1:5173'])
+const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
+
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  clientUrl,
+])
 const validStatuses = new Set(['not_started', 'solved'])
 const validDifficulties = new Set(['easy', 'medium', 'hard'])
 const scrypt = promisify(scryptCallback)
@@ -13,7 +19,6 @@ const sessionCookieName = 'dsa_session'
 const sessionDurationMs = 7 * 24 * 60 * 60 * 1000
 const oauthStateCookieName = 'dsa_google_oauth_state'
 const oauthStateDurationMs = 10 * 60 * 1000
-const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
 const googleClientId = process.env.GOOGLE_CLIENT_ID || ''
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || `http://localhost:${port}/api/auth/google/callback`
