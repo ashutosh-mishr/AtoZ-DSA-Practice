@@ -64,10 +64,14 @@ export default function AuthPage({ mode = 'login', onNavigate }) {
     if (!isLogin && password !== confirmPassword) return setError('Passwords do not match.')
     setSubmitting(true)
     try {
-      if (isLogin) await login(email, password)
-      else await register(name, email, password)
-      window.history.replaceState({}, '', '/dashboard')
-      window.dispatchEvent(new PopStateEvent('popstate'))
+      if (isLogin) {
+        await login(email, password)
+        window.history.replaceState({}, '', '/dashboard')
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      } else {
+        await register(name, email, password)
+        setError('Account created. Please check your email to verify your account.')
+      }
     } catch (requestError) {
       setError(requestError.message)
     } finally {

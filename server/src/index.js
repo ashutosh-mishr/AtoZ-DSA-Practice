@@ -32,6 +32,9 @@ const resendFromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
 const passwordResetUrl = (process.env.PASSWORD_RESET_URL || `${clientUrl}/reset-password`).replace(/\/$/, '')
 const passwordResetTtlMs = Math.max(5, Number(process.env.PASSWORD_RESET_TTL_MINUTES || 30)) * 60 * 1000
 const passwordResetRateLimitMs = 15 * 60 * 1000
+const emailVerificationUrl = (process.env.EMAIL_VERIFICATION_URL || 'http://localhost:5001/api/auth/verify-email').replace(/\/$/, '')
+const emailVerificationTtlMs = Math.max(5, Number(process.env.EMAIL_VERIFICATION_TTL_MINUTES || 30)) * 60 * 1000
+
 const passwordResetRateLimitMax = 3
 const passwordResetAttempts = new Map()
 
@@ -66,6 +69,29 @@ function passwordResetRateLimited(request, email) {
 
 function hashResetToken(token) {
   return createHash('sha256').update(token).digest('hex')
+}
+
+async function sendEmailVerificationEmail(email, token) {
+  if (!resendConfigured()) throw new Error('Resend is not configured.')
+  const verifyLink = `${emailVerificationUrl}?token=${encodeURIComponent(token)}`
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: resendFromEmail,
+      to: [email],
+      subject: 'Verify your DSA Practice email',
+      html: `<!doctype html><html><body style="margin:0;background:#f8f7ff;font-family:Arial,sans-serif;color:#171717"><div style="max-width:560px;margin:40px auto;padding:36px 28px;background:#fff;border:1px solid #e5e7eb;border-radius:20px"><div style="font-size:24px;font-weight:700;color:#6d28d9">DSA Practice</div><h1 style="font-size:28px;margin:28px 0 12px">Verify your email</h1><p style="font-size:16px;line-height:1.6;color:#52525b">Thanks for creating your DSA Practice account. Click the button below to verify your email address.</p><p style="margin:28px 0"><a href="${verifyLink}" style="display:inline-block;padding:14px 22px;background:#6d28d9;color:#fff;text-decoration:none;border-radius:10px;font-weight:700">Verify email</a></p><p style="font-size:13px;line-height:1.6;color:#71717a">This verification link expires in ${Math.round(emailVerificationTtlMs / 60000)} minutes.</p><p style="font-size:13px;color:#a1a1aa;margin-top:28px">DSA Practice Tracker</p></div></body></html>`,
+    }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`Resend email failed: ${response.status} ${details}`)
+  }
 }
 
 async function sendPasswordResetEmail(email, token) {
@@ -460,25 +486,80 @@ app.post('/api/auth/register', asyncHandler(async (request, response) => {
   const name = typeof request.body?.name === 'string' ? request.body.name.trim() : ''
   const email = normalizeEmail(request.body?.email)
   const password = request.body?.password
+
   if (!name) return sendError(response, 400, 'invalid_input', 'Name is required.')
   if (!/^\S+@\S+\.\S+$/.test(email)) return sendError(response, 400, 'invalid_input', 'Please enter a valid email address.')
   if (typeof password !== 'string' || password.length < 8) return sendError(response, 400, 'invalid_input', 'Password must be at least 8 characters.')
+
   const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email])
   if (existing.rowCount) return sendError(response, 409, 'email_exists', 'An account with this email already exists.')
+
   const passwordHash = await hashPassword(password)
-  const result = await pool.query("INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, 'user') RETURNING id, email, name, role, password_hash, google_id, welcome_message, is_primary_admin", [email, passwordHash, name])
-  const token = await createSession(result.rows[0].id)
-  setSessionCookie(response, token)
-  response.status(201).json({ user: publicUser(result.rows[0]) })
+
+  const result = await pool.query(
+    "INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, 'user') RETURNING id, email, name, role, password_hash, google_id, welcome_message, is_primary_admin",
+    [email, passwordHash, name]
+  )
+
+  const verificationToken = randomBytes(32).toString('hex')
+  const verificationTokenHash = hashResetToken(verificationToken)
+  const verificationExpiresAt = new Date(Date.now() + emailVerificationTtlMs)
+
+  await pool.query(
+    'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+    [result.rows[0].id, verificationTokenHash, verificationExpiresAt]
+  )
+
+  try {
+    await sendEmailVerificationEmail(result.rows[0].email, verificationToken)
+  } catch (error) {
+    await pool.query('DELETE FROM users WHERE id = $1', [result.rows[0].id])
+    throw error
+  }
+
+  response.status(201).json({
+    message: 'Account created. Please check your email to verify your account.',
+    email_verification_required: true,
+  })
+}))
+
+app.get('/api/auth/verify-email', asyncHandler(async (request, response) => {
+  const token = typeof request.query?.token === 'string' ? request.query.token : ''
+  if (!token) return response.redirect(`${clientUrl}/login?verification_error=invalid`)
+
+  const tokenHash = hashResetToken(token)
+
+  const result = await pool.query(
+    `SELECT id, user_id FROM email_verification_tokens
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP`,
+    [tokenHash],
+  )
+
+  if (!result.rowCount) return response.redirect(`${clientUrl}/login?verification_error=expired`)
+
+  await pool.query(
+    `UPDATE users
+     SET email_verified = TRUE, email_verified_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+     WHERE id = $1`,
+    [result.rows[0].user_id],
+  )
+
+  await pool.query(
+    'UPDATE email_verification_tokens SET used_at = CURRENT_TIMESTAMP WHERE id = $1',
+    [result.rows[0].id],
+  )
+
+  response.redirect(`${clientUrl}/login?verified=true`)
 }))
 
 app.post('/api/auth/login', asyncHandler(async (request, response) => {
   const email = normalizeEmail(request.body?.email)
   const password = request.body?.password
   if (!/^\S+@\S+\.\S+$/.test(email) || typeof password !== 'string') return sendError(response, 400, 'invalid_input', 'Email and password are required.')
-  const result = await pool.query('SELECT id, email, name, role, password_hash, active, google_id, welcome_message, is_primary_admin FROM users WHERE email = $1', [email])
+  const result = await pool.query('SELECT id, email, name, role, password_hash, active, google_id, email_verified, welcome_message, is_primary_admin FROM users WHERE email = $1', [email])
   if (!result.rowCount || !result.rows[0].password_hash || !(await verifyPassword(password, result.rows[0].password_hash))) return sendError(response, 401, 'invalid_credentials', 'Invalid email or password.')
   if (!result.rows[0].active) return sendError(response, 403, 'account_disabled', 'Your account has been disabled. Please contact an administrator.')
+  if (!result.rows[0].google_id && !result.rows[0].email_verified) return sendError(response, 403, 'email_not_verified', 'Please verify your email address before signing in.')
   const token = await createSession(result.rows[0].id)
   setSessionCookie(response, token)
   response.json({ user: publicUser(result.rows[0]) })
