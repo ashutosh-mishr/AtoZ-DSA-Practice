@@ -209,7 +209,7 @@ async function verifyPassword(password, storedHash) {
 
 function setSessionCookie(response, token) {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  response.setHeader('Set-Cookie', `${sessionCookieName}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${Math.floor(sessionDurationMs / 1000)}; SameSite=Lax${secure}`)
+  response.setHeader('Set-Cookie', `${sessionCookieName}=${encodeURIComponent(token)}; HttpOnly; Path=/; Max-Age=${Math.floor(sessionDurationMs / 1000)}; SameSite=${process.env.NODE_ENV === 'production' ? 'None' : 'Lax'}${secure}`)
 }
 
 function clearSessionCookie(response) {
